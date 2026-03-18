@@ -4,6 +4,10 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Tester Monitoring — Amphenol FCI</title>
+
+<!-- Browser tab logo (favicon) -->
+<link rel="icon" type="image/png" href="https://i.ibb.co/84KHnbHz/Screenshot-2026-03-18-095011.png"/>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
@@ -22,9 +26,10 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--light);color:var(--
 /* Header */
 header{background:var(--navy);color:#fff;padding:0 28px;height:62px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,0.3);position:sticky;top:0;z-index:50}
 .logo-area{display:flex;align-items:center;gap:12px}
-.logo-box{width:40px;height:40px;background:linear-gradient(135deg,var(--accent),var(--green));border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;font-family:'IBM Plex Mono',monospace}
+.logo-box{width:42px;height:42px;border-radius:10px;overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center;padding:3px;flex-shrink:0}
+.logo-box img{width:100%;height:100%;object-fit:contain}
 .brand-main{font-size:15px;font-weight:700;line-height:1.2}
-.brand-sub{font-size:10px;opacity:0.5;letter-spacing:1.2px;text-transform:uppercase}
+.brand-sub{font-size:10px;opacity:0.55;letter-spacing:1.2px;text-transform:uppercase}
 .sys-label{font-size:13px;font-weight:500;opacity:0.85}
 .hdr-right{display:flex;align-items:center;gap:12px}
 .role-pill{padding:3px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase}
@@ -40,9 +45,25 @@ header{background:var(--navy);color:#fff;padding:0 28px;height:62px;display:flex
 /* Auth */
 .auth-overlay{position:fixed;inset:0;background:var(--navy);z-index:200;display:flex;align-items:center;justify-content:center}
 .auth-card{background:#fff;border-radius:20px;padding:44px 40px;width:400px;box-shadow:0 32px 80px rgba(0,0,0,0.5)}
-.auth-logo{width:64px;height:64px;background:linear-gradient(135deg,var(--accent),var(--green));border-radius:16px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;color:#fff;font-family:'IBM Plex Mono',monospace;margin:0 auto 14px}
+
+/* Login logo — image version */
+.auth-logo{
+  width:90px;height:90px;
+  border-radius:18px;
+  overflow:hidden;
+  background:#fff;
+  border:2px solid #e8ecf3;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 14px;
+  padding:6px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.1);
+}
+.auth-logo img{width:100%;height:100%;object-fit:contain}
+
 .auth-brand{text-align:center;font-size:21px;font-weight:700;color:var(--navy)}
-.auth-sub{text-align:center;font-size:11px;color:var(--muted);margin-bottom:30px;letter-spacing:0.8px;text-transform:uppercase;margin-top:4px}
+.auth-dept{text-align:center;font-size:12px;font-weight:600;color:var(--accent);letter-spacing:0.5px;margin-top:3px}
+.auth-sub{text-align:center;font-size:11px;color:var(--muted);margin-bottom:28px;letter-spacing:0.6px;text-transform:uppercase;margin-top:8px;padding-top:8px;border-top:1px solid var(--border2)}
+
 .auth-tabs{display:flex;border:1.5px solid var(--border);border-radius:10px;margin-bottom:24px;overflow:hidden}
 .auth-tab{flex:1;padding:9px;font-size:13px;font-weight:600;text-align:center;cursor:pointer;background:#fff;color:var(--muted);border:none;font-family:'IBM Plex Sans',sans-serif;transition:all 0.2s}
 .auth-tab.active{background:var(--navy);color:#fff}
@@ -169,30 +190,32 @@ tr.row-expired:hover td{background:#fff0f0}
 <body>
 
 <!-- ════════════════════════════════════
-     ⚙️  EDIT THIS SECTION
+     ⚙️  EDIT THIS SECTION ONLY
      ════════════════════════════════════ -->
 <script>
-  // 1. Paste your Supabase project URL and anon key here
   const SUPABASE_URL  = 'https://wuslxgwmfjbvpgezoqha.supabase.co';
   const SUPABASE_ANON = 'sb_publishable_qiuYzjMkZkLyxLSkBOWeCw_PgvRvsM0';
 
-  // 2. Add employee IDs that should have ADMIN access
-  //    Anyone NOT in this list gets Technician access automatically
   const ADMIN_IDS = [
-    'E01530',  // AJITH
-    'E05678',  // Your Manager
+    'E01530',  // AJITH P
+    'E05678',  // Manager
     'E09012',  // HOD
-    // Add more anytime: 'E11111',
   ];
+
+  // Logo URL — change if you upload a new logo
+  const LOGO_URL = 'https://i.ibb.co/84KHnbHz/Screenshot-2026-03-18-095011.png';
 </script>
 <!-- ════════════════════════════════════ -->
 
+<!-- Header -->
 <header>
   <div class="logo-area">
-    <div class="logo-box">FCI</div>
+    <div class="logo-box">
+      <img id="headerLogo" src="" alt="Amphenol FCI" />
+    </div>
     <div>
       <div class="brand-main">Amphenol FCI</div>
-      <div class="brand-sub">Automation Dept</div>
+      <div class="brand-sub">Automation</div>
     </div>
   </div>
   <div class="sys-label">Tester Monitoring System</div>
@@ -211,9 +234,16 @@ tr.row-expired:hover td{background:#fff0f0}
 <!-- Auth Overlay -->
 <div class="auth-overlay" id="authOverlay">
   <div class="auth-card">
-    <div class="auth-logo">FCI</div>
+
+    <!-- Login page logo -->
+    <div class="auth-logo">
+      <img id="loginLogo" src="" alt="Amphenol FCI" />
+    </div>
+
     <div class="auth-brand">Amphenol FCI</div>
+    <div class="auth-dept">Automation</div>
     <div class="auth-sub">Tester Monitoring System</div>
+
     <div class="auth-tabs">
       <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
       <button class="auth-tab"        onclick="switchTab('register')">Register</button>
@@ -259,13 +289,13 @@ tr.row-expired:hover td{background:#fff0f0}
       <button class="auth-btn" id="regBtn" onclick="doRegister()">Create Account</button>
       <div class="auth-note">After registering, an <strong>admin must approve</strong> your account before you can login.</div>
     </div>
+
   </div>
 </div>
 
 <!-- Main App -->
 <div class="main" id="mainApp" style="display:none">
 
-  <!-- Admin navigation tabs -->
   <div id="adminTabsBar" style="display:none">
     <div class="admin-tabs">
       <button class="admin-tab active" onclick="showSection('testers')">🔧 Testers</button>
@@ -273,7 +303,7 @@ tr.row-expired:hover td{background:#fff0f0}
     </div>
   </div>
 
-  <!-- TESTERS section -->
+  <!-- TESTERS -->
   <div id="sectionTesters">
     <div class="page-hdr">
       <div class="page-title">Tester Database</div>
@@ -284,25 +314,20 @@ tr.row-expired:hover td{background:#fff0f0}
     <div class="toolbar">
       <select id="fBU" onchange="filterTable()">
         <option value="">All BU</option>
-        <option>POWER BU</option>
-        <option>CMIO</option>
-        <option>ACPA</option>
-        <option>BASICS</option>
+        <option>POWER BU</option><option>CMIO</option>
+        <option>ACPA</option><option>BASICS</option>
       </select>
       <select id="fAsm" onchange="filterTable()">
         <option value="">All Assembly</option>
-        <option value="1">Assembly 1</option>
-        <option value="2">Assembly 2</option>
-        <option value="3">Assembly 3</option>
-        <option value="4">Assembly 4</option>
+        <option value="1">Assembly 1</option><option value="2">Assembly 2</option>
+        <option value="3">Assembly 3</option><option value="4">Assembly 4</option>
       </select>
       <div class="search-wrap">
         <span class="search-icon">🔍</span>
         <input type="text" id="fSearch" placeholder="Search tester or project..." oninput="filterTable()" />
       </div>
       <label class="chk-label">
-        <input type="checkbox" id="fShowExpired" onchange="filterTable()" />
-        Show expired
+        <input type="checkbox" id="fShowExpired" onchange="filterTable()" /> Show expired
       </label>
     </div>
     <div id="loadingState" class="loading-state"><div class="spinner"></div>Loading testers...</div>
@@ -310,14 +335,8 @@ tr.row-expired:hover td{background:#fff0f0}
       <table>
         <thead>
           <tr>
-            <th>BU</th>
-            <th>Assembly</th>
-            <th>Project</th>
-            <th>Tester Name</th>
-            <th>Type</th>
-            <th>Document</th>
-            <th>QR Code</th>
-            <th>Added By</th>
+            <th>BU</th><th>Assembly</th><th>Project</th><th>Tester Name</th>
+            <th>Type</th><th>Document</th><th>QR Code</th><th>Added By</th>
             <th id="actionHead" class="hidden">Actions</th>
           </tr>
         </thead>
@@ -325,12 +344,12 @@ tr.row-expired:hover td{background:#fff0f0}
       </table>
       <div class="empty-state hidden" id="emptyState">
         <div class="empty-icon">🔧</div>
-        <p>No testers found. Adjust your filters or add a new tester.</p>
+        <p>No testers found. Adjust filters or add a new tester.</p>
       </div>
     </div>
   </div>
 
-  <!-- USERS section (Admin only) -->
+  <!-- USERS -->
   <div id="sectionUsers" style="display:none">
     <div class="page-hdr">
       <div class="page-title">Users &amp; Approvals</div>
@@ -341,12 +360,8 @@ tr.row-expired:hover td{background:#fff0f0}
       <table>
         <thead>
           <tr>
-            <th>Employee ID</th>
-            <th>Full Name</th>
-            <th>Role</th>
-            <th>Status</th>
-            <th>Registered On</th>
-            <th>Actions</th>
+            <th>Employee ID</th><th>Full Name</th><th>Role</th>
+            <th>Status</th><th>Registered On</th><th>Actions</th>
           </tr>
         </thead>
         <tbody id="usersBody"></tbody>
@@ -365,7 +380,8 @@ tr.row-expired:hover td{background:#fff0f0}
       <div class="form-group">
         <label>Business Unit</label>
         <select id="fmBU">
-          <option>POWER BU</option><option>CMIO</option><option>ACPA</option><option>BASICS</option>
+          <option>POWER BU</option><option>CMIO</option>
+          <option>ACPA</option><option>BASICS</option>
         </select>
       </div>
       <div class="form-group">
@@ -395,7 +411,7 @@ tr.row-expired:hover td{background:#fff0f0}
       <div class="form-group" id="expiryGroup" style="display:none">
         <label>Expiry Date</label>
         <input type="date" id="fmExpiry" />
-        <div class="form-hint">Tester shows EXPIRED after this date</div>
+        <div class="form-hint">Shows EXPIRED after this date</div>
       </div>
     </div>
     <div class="form-group">
@@ -443,6 +459,10 @@ tr.row-expired:hover td{background:#fff0f0}
 <div class="toast" id="toast"></div>
 
 <script>
+// Set logo everywhere from the single LOGO_URL variable
+document.getElementById('headerLogo').src = LOGO_URL;
+document.getElementById('loginLogo').src  = LOGO_URL;
+
 // ── Init Supabase ──
 let sb;
 try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON); }
@@ -466,12 +486,10 @@ async function doLogin() {
   hideMsg('loginErr');
   if (!empId||!pass) { showMsg('loginErr','Please enter your Employee ID and password.'); return; }
   setBtn('loginBtn',true,'Signing in...');
-
   const {data:user,error} = await sb.from('users').select('*').eq('emp_id',empId).single();
   if (error||!user) { showMsg('loginErr','Employee ID not found. Please register first.'); setBtn('loginBtn',false,'Sign In'); return; }
   if (!user.approved) { showMsg('loginErr','Your account is pending admin approval.'); setBtn('loginBtn',false,'Sign In'); return; }
   if (user.password_hash !== btoa(pass)) { showMsg('loginErr','Incorrect password.'); setBtn('loginBtn',false,'Sign In'); return; }
-
   await sb.from('users').update({last_login:new Date().toISOString()}).eq('id',user.id);
   const isAdmin = ADMIN_IDS.includes(empId);
   currentUser = {emp_id:empId, name:user.full_name, role:isAdmin?'Admin':'Technician', db_id:user.id};
@@ -486,16 +504,13 @@ async function doRegister() {
   const pass  = document.getElementById('rPass').value;
   const pass2 = document.getElementById('rPass2').value;
   hideMsg('regErr'); hideMsg('regOk');
-
   if (!empId||!name||!pass) { showMsg('regErr','Please fill all fields.'); return; }
   if (!/^E\d{5}$/.test(empId)) { showMsg('regErr','Employee ID must be in format E01234 (E + 5 digits).'); return; }
   if (pass.length<6) { showMsg('regErr','Password must be at least 6 characters.'); return; }
   if (pass!==pass2) { showMsg('regErr','Passwords do not match.'); return; }
-
   setBtn('regBtn',true,'Registering...');
   const {data:existing} = await sb.from('users').select('id').eq('emp_id',empId).maybeSingle();
   if (existing) { showMsg('regErr','This Employee ID is already registered.'); setBtn('regBtn',false,'Create Account'); return; }
-
   const isAdmin = ADMIN_IDS.includes(empId);
   const {error} = await sb.from('users').insert({
     emp_id:empId, full_name:name, password_hash:btoa(pass),
@@ -509,30 +524,24 @@ async function doRegister() {
     : 'Account created! An admin must approve it before you can login.');
 }
 
-function showMsg(id,msg,isOk) {
-  const el=document.getElementById(id);
-  el.textContent=msg; el.style.display='block';
-}
-function hideMsg(id) { document.getElementById(id).style.display='none'; }
+function showMsg(id,msg) { const el=document.getElementById(id); el.textContent=msg; el.style.display='block'; }
+function hideMsg(id)     { document.getElementById(id).style.display='none'; }
 function setBtn(id,dis,txt) { const b=document.getElementById(id); b.disabled=dis; b.textContent=txt; }
 
-// ── Boot after login ──
+// ── Boot ──
 function bootApp() {
   document.getElementById('authOverlay').style.display='none';
   document.getElementById('mainApp').style.display='block';
   document.getElementById('userChip').style.display='flex';
   const isAdmin = currentUser.role==='Admin';
-
   document.getElementById('hdrName').textContent   = currentUser.name;
   document.getElementById('hdrId').textContent     = currentUser.emp_id;
   document.getElementById('hdrAvatar').textContent = currentUser.name[0].toUpperCase();
   document.getElementById('hdrAvatar').className   = 'avatar '+(isAdmin?'av-admin':'av-tech');
-
   const pill = document.getElementById('hdrRolePill');
   pill.textContent = currentUser.role;
   pill.className   = 'role-pill '+(isAdmin?'role-admin':'role-tech');
   pill.style.display='inline-block';
-
   if (isAdmin) {
     document.getElementById('addBtn').classList.remove('hidden');
     document.getElementById('actionHead').classList.remove('hidden');
@@ -552,7 +561,7 @@ function showSection(sec) {
   if (sec==='users') loadUsers();
 }
 
-// ── Load Testers ──
+// ── Testers ──
 async function loadTesters() {
   document.getElementById('loadingState').style.display='block';
   document.getElementById('tableWrap').style.display='none';
@@ -570,16 +579,15 @@ function isExpired(t) {
 }
 
 function filterTable() {
-  const bu  = document.getElementById('fBU').value;
-  const asm = document.getElementById('fAsm').value;
-  const q   = document.getElementById('fSearch').value.toLowerCase();
-  const showExp = document.getElementById('fShowExpired').checked;
-
-  const filtered = allTesters.filter(t=>{
-    if (bu  && t.bu!==bu)       return false;
-    if (asm && t.assembly!==asm) return false;
-    if (q && !(t.name.toLowerCase().includes(q)||t.project.toLowerCase().includes(q)||t.bu.toLowerCase().includes(q))) return false;
-    if (!showExp && isExpired(t)) return false;
+  const bu=document.getElementById('fBU').value;
+  const asm=document.getElementById('fAsm').value;
+  const q=document.getElementById('fSearch').value.toLowerCase();
+  const showExp=document.getElementById('fShowExpired').checked;
+  const filtered=allTesters.filter(t=>{
+    if(bu&&t.bu!==bu) return false;
+    if(asm&&t.assembly!==asm) return false;
+    if(q&&!(t.name.toLowerCase().includes(q)||t.project.toLowerCase().includes(q)||t.bu.toLowerCase().includes(q))) return false;
+    if(!showExp&&isExpired(t)) return false;
     return true;
   });
   document.getElementById('countPill').textContent=filtered.length;
@@ -590,22 +598,22 @@ function buClass(bu) {
   return {'POWER BU':'bu-POWER','CMIO':'bu-CMIO','ACPA':'bu-ACPA','BASICS':'bu-BASICS'}[bu]||'bu-BASICS';
 }
 function typeBadge(t) {
-  if (t.tester_type==='temporary') {
-    if (isExpired(t)) return `<span class="type-badge badge-expired">🔴 EXPIRED</span>`;
+  if(t.tester_type==='temporary'){
+    if(isExpired(t)) return `<span class="type-badge badge-expired">🔴 EXPIRED</span>`;
     return `<span class="type-badge badge-temp">🟡 TEMP</span>`;
   }
   return `<span class="type-badge badge-perm">🔵 PERMANENT</span>`;
 }
 function fmtDate(iso) {
-  if (!iso) return '—';
+  if(!iso) return '—';
   return new Date(iso).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
 }
 
 function renderRows(rows) {
-  const isAdmin = currentUser&&currentUser.role==='Admin';
+  const isAdmin=currentUser&&currentUser.role==='Admin';
   const tbody=document.getElementById('tBody');
   const empty=document.getElementById('emptyState');
-  if (!rows.length) { tbody.innerHTML=''; empty.classList.remove('hidden'); return; }
+  if(!rows.length){tbody.innerHTML='';empty.classList.remove('hidden');return;}
   empty.classList.add('hidden');
   tbody.innerHTML=rows.map(t=>`
     <tr class="${isExpired(t)?'row-expired':''}">
@@ -616,13 +624,7 @@ function renderRows(rows) {
       <td>${typeBadge(t)}</td>
       <td><button class="btn btn-green btn-sm" onclick="openDoc(${t.id})">${t.doc_path?'📄 Open Spec':'📁 No Doc'}</button></td>
       <td><button class="btn btn-qr" onclick="showQR(${t.id})">⬛ QR</button></td>
-      <td>
-        <div class="audit-cell">
-          <div class="audit-who">${t.added_by_name||'—'}</div>
-          <div>${t.added_by_id||''}</div>
-          <div>${fmtDate(t.created_at)}</div>
-        </div>
-      </td>
+      <td><div class="audit-cell"><div class="audit-who">${t.added_by_name||'—'}</div><div>${t.added_by_id||''}</div><div>${fmtDate(t.created_at)}</div></div></td>
       <td class="${isAdmin?'':'hidden'}">
         <div class="td-actions">
           <button class="btn btn-outline btn-sm" onclick="openEdit(${t.id})">✏ Edit</button>
@@ -633,10 +635,8 @@ function renderRows(rows) {
 }
 
 // ── Add / Edit ──
-function toggleExpiry() {
-  document.getElementById('expiryGroup').style.display=document.getElementById('fmType').value==='temporary'?'block':'none';
-}
-function openAdd() {
+function toggleExpiry(){document.getElementById('expiryGroup').style.display=document.getElementById('fmType').value==='temporary'?'block':'none';}
+function openAdd(){
   document.getElementById('addModalTitle').textContent='Add New Tester';
   document.getElementById('eId').value='';
   document.getElementById('fmBU').value='POWER BU';
@@ -649,7 +649,7 @@ function openAdd() {
   resetUpload(); pendingFile=null;
   document.getElementById('addModal').classList.add('open');
 }
-function openEdit(id) {
+function openEdit(id){
   const t=allTesters.find(x=>x.id===id); if(!t)return;
   document.getElementById('addModalTitle').textContent='Edit Tester';
   document.getElementById('eId').value=id;
@@ -667,19 +667,19 @@ function openEdit(id) {
   pendingFile=null;
   document.getElementById('addModal').classList.add('open');
 }
-function resetUpload() {
+function resetUpload(){
   document.getElementById('uploadLabel').innerHTML='<strong>Click to select PDF</strong><br>Tester specification document';
   document.getElementById('uploadArea').classList.remove('has-file');
   document.getElementById('pdfInput').value='';
 }
-function onFileSelect(e) {
+function onFileSelect(e){
   const f=e.target.files[0]; if(!f)return;
   pendingFile=f;
   document.getElementById('uploadLabel').innerHTML=`<strong>📄 ${f.name}</strong><br>${(f.size/1024).toFixed(0)} KB — ready`;
   document.getElementById('uploadArea').classList.add('has-file');
 }
 
-async function saveTester() {
+async function saveTester(){
   const bu=document.getElementById('fmBU').value;
   const assembly=document.getElementById('fmAsm').value;
   const project=document.getElementById('fmProject').value.trim();
@@ -687,25 +687,20 @@ async function saveTester() {
   const tester_type=document.getElementById('fmType').value;
   const expiry_date=document.getElementById('fmExpiry').value||null;
   const eid=document.getElementById('eId').value;
-
   if(!project||!name){showToast('Please fill in all fields.','err');return;}
   if(tester_type==='temporary'&&!expiry_date){showToast('Please set an expiry date.','warn');return;}
-
   setBtn('saveBtn',true,'Saving...');
   let doc_path=null,doc_name=null;
-
   if(pendingFile){
     const fn=`${Date.now()}_${pendingFile.name.replace(/\s+/g,'_')}`;
     const{data:up,error:ue}=await sb.storage.from('tester-docs').upload(fn,pendingFile,{upsert:true});
     if(ue){showToast('PDF upload failed: '+ue.message,'err');setBtn('saveBtn',false,'Save Tester');return;}
     doc_path=up.path; doc_name=pendingFile.name;
   }
-
   const payload={bu,assembly,project,name,tester_type,
     expiry_date:tester_type==='temporary'?expiry_date:null,
-    added_by_id:currentUser.emp_id, added_by_name:currentUser.name};
+    added_by_id:currentUser.emp_id,added_by_name:currentUser.name};
   if(pendingFile){payload.doc_path=doc_path;payload.doc_name=doc_name;}
-
   if(eid){
     const{error}=await sb.from('testers').update(payload).eq('id',eid);
     if(error){showToast('Update failed: '+error.message,'err');setBtn('saveBtn',false,'Save Tester');return;}
@@ -721,7 +716,7 @@ async function saveTester() {
   loadTesters();
 }
 
-async function deleteTester(id) {
+async function deleteTester(id){
   const t=allTesters.find(x=>x.id===id); if(!t)return;
   if(!confirm(`Delete "${t.name}"?\nThis cannot be undone.`))return;
   if(t.doc_path) await sb.storage.from('tester-docs').remove([t.doc_path]);
@@ -732,7 +727,7 @@ async function deleteTester(id) {
 }
 
 // ── Doc Viewer ──
-async function openDoc(id) {
+async function openDoc(id){
   const t=allTesters.find(x=>x.id===id); if(!t)return;
   document.getElementById('docTitle').textContent=t.name+' — Specification';
   const content=document.getElementById('docContent');
@@ -751,8 +746,8 @@ async function openDoc(id) {
   document.getElementById('docModal').classList.add('open');
 }
 
-// ── QR Code ──
-function makeQR(text) {
+// ── QR ──
+function makeQR(text){
   const N=25,cell=7;
   let h=0;
   for(let i=0;i<text.length;i++) h=(Math.imul(31,h)+text.charCodeAt(i))|0;
@@ -767,8 +762,7 @@ function makeQR(text) {
   const sz=N*cell+8;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${sz} ${sz}" width="184" height="184"><rect width="${sz}" height="${sz}" fill="#fff"/>${rects}</svg>`;
 }
-
-function showQR(id) {
+function showQR(id){
   const t=allTesters.find(x=>x.id===id); if(!t)return;
   const url=`${window.location.href.split('#')[0]}#tester-${t.id}`;
   document.getElementById('qrName').textContent=t.name;
@@ -778,13 +772,13 @@ function showQR(id) {
   window._qrPrint={name:t.name,meta:`${t.bu} · Assembly ${t.assembly}`,project:t.project,url,svg:makeQR(url)};
   document.getElementById('qrModal').classList.add('open');
 }
-
-function printQR() {
+function printQR(){
   const d=window._qrPrint; if(!d)return;
-  const w=window.open('','_blank','width=440,height=580');
+  const w=window.open('','_blank','width=440,height=600');
   w.document.write(`<!DOCTYPE html><html><head><title>QR — ${d.name}</title>
 <style>body{font-family:'Segoe UI',sans-serif;text-align:center;padding:36px;background:#fff}
-.co{font-size:11px;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.logo{width:60px;height:60px;object-fit:contain;margin-bottom:10px}
+.co{font-size:11px;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
 .title{font-size:22px;font-weight:700;color:#0b1f3a;margin-bottom:4px}
 .meta{font-size:12px;color:#666;margin-bottom:4px}
 .proj{font-size:14px;font-weight:600;color:#0057b8;margin-bottom:20px}
@@ -792,7 +786,8 @@ hr{border:none;border-top:1px solid #e5e7eb;margin:16px 0}
 .url{font-size:9px;color:#bbb;word-break:break-all;font-family:monospace;margin-top:10px}
 .note{font-size:11px;color:#ccc;margin-top:6px}
 @media print{body{padding:16px}}</style></head><body>
-<div class="co">Amphenol FCI · Automation Department</div>
+<img class="logo" src="${LOGO_URL}" alt="logo"/>
+<div class="co">Amphenol FCI · Automation</div>
 <div class="title">${d.name}</div>
 <div class="meta">${d.meta}</div>
 <div class="proj">${d.project}</div>
@@ -810,8 +805,8 @@ let deepLinkId=null;
 function checkDeepLink(){const m=window.location.hash.match(/#tester-(\d+)/);if(m)deepLinkId=parseInt(m[1]);}
 function handleDeepLink(){if(!deepLinkId)return;const id=deepLinkId;deepLinkId=null;setTimeout(()=>openDoc(id),500);}
 
-// ── Users Management ──
-async function loadUsers() {
+// ── Users ──
+async function loadUsers(){
   document.getElementById('usersLoading').style.display='block';
   document.getElementById('usersWrap').style.display='none';
   const{data,error}=await sb.from('users').select('*').order('approved',{ascending:true}).order('created_at',{ascending:false});
@@ -820,33 +815,22 @@ async function loadUsers() {
   if(error){showToast('Error: '+error.message,'err');return;}
   document.getElementById('userCountPill').textContent=(data||[]).length;
   const tbody=document.getElementById('usersBody');
-  if(!data||!data.length){
-    tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">No registered users yet.</td></tr>`;
-    return;
-  }
+  if(!data||!data.length){tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">No registered users yet.</td></tr>`;return;}
   tbody.innerHTML=data.map(u=>{
     const isAdm=ADMIN_IDS.includes(u.emp_id);
-    const roleLbl=isAdm
-      ?`<span class="type-badge badge-perm">Admin</span>`
-      :`<span class="type-badge" style="background:#f0f4f9;color:var(--muted)">Technician</span>`;
-    const status=u.approved
-      ?`<span class="type-badge" style="background:#d1fae5;color:#065f46">✅ Approved</span>`
-      :`<span class="type-badge badge-temp">⏳ Pending</span>`;
-    const actions=u.emp_id===currentUser.emp_id
-      ?'<span style="font-size:12px;color:var(--muted2)">— You —</span>'
-      :`${!u.approved?`<button class="btn btn-green btn-sm" onclick="approveUser(${u.id})">✔ Approve</button>`:''}
-       ${!isAdm?`<button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id},'${u.emp_id}')">🗑 Remove</button>`:''}`;
+    const roleLbl=isAdm?`<span class="type-badge badge-perm">Admin</span>`:`<span class="type-badge" style="background:#f0f4f9;color:var(--muted)">Technician</span>`;
+    const status=u.approved?`<span class="type-badge" style="background:#d1fae5;color:#065f46">✅ Approved</span>`:`<span class="type-badge badge-temp">⏳ Pending</span>`;
+    const actions=u.emp_id===currentUser.emp_id?'<span style="font-size:12px;color:var(--muted2)">— You —</span>':`
+      ${!u.approved?`<button class="btn btn-green btn-sm" onclick="approveUser(${u.id})">✔ Approve</button>`:''}
+      ${!isAdm?`<button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id},'${u.emp_id}')">🗑 Remove</button>`:''}`;
     return `<tr class="${!u.approved?'pending-row':''}">
       <td><strong style="font-family:'IBM Plex Mono',monospace">${u.emp_id}</strong></td>
-      <td>${u.full_name}</td>
-      <td>${roleLbl}</td>
-      <td>${status}</td>
+      <td>${u.full_name}</td><td>${roleLbl}</td><td>${status}</td>
       <td style="font-size:12px;color:var(--muted)">${fmtDate(u.created_at)}</td>
       <td><div class="td-actions">${actions}</div></td>
     </tr>`;
   }).join('');
 }
-
 async function approveUser(id){
   const{error}=await sb.from('users').update({approved:true}).eq('id',id);
   if(error){showToast('Error: '+error.message,'err');return;}
@@ -861,10 +845,9 @@ async function deleteUser(id,empId){
   loadUsers();
 }
 
-// ── Utilities ──
+// ── Utils ──
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.modal-bg').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
-
 let toastTimer;
 function showToast(msg,type){
   clearTimeout(toastTimer);
@@ -872,10 +855,8 @@ function showToast(msg,type){
   t.textContent=msg; t.className='toast '+(type||''); t.classList.add('show');
   toastTimer=setTimeout(()=>t.classList.remove('show'),3500);
 }
-
 document.getElementById('lPass').addEventListener('keydown', e=>{if(e.key==='Enter')doLogin();});
 document.getElementById('lEmpId').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
-
 checkDeepLink();
 </script>
 </body>
