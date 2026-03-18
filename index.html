@@ -9,7 +9,6 @@
 <link rel="icon" type="image/png" href="https://i.ibb.co/84KHnbHz/Screenshot-2026-03-18-095011.png"/>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -164,7 +163,7 @@ tr.row-expired:hover td{background:#fff0f0}
 .qr-modal .modal{width:340px;text-align:center}
 .qr-tester{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:4px}
 .qr-meta{font-size:12px;color:var(--muted);margin-bottom:14px}
-.qr-frame{width:204px;height:204px;margin:0 auto 12px;background:#fff;border:2px solid var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;padding:10px}
+.qr-frame{width:210px;height:210px;margin:0 auto 12px;background:#fff;border:2px solid var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;padding:12px}.qr-frame img{width:180px;height:180px}
 .qr-url{font-size:10px;color:var(--muted2);word-break:break-all;font-family:'IBM Plex Mono',monospace}
 .qr-note{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6}
 
@@ -759,22 +758,20 @@ function showQR(id){
   document.getElementById('qrMeta').textContent=`${t.bu} · Assembly ${t.assembly} · ${t.project}`;
   document.getElementById('qrUrl').textContent=url;
 
-  // Use proper QRCode library — 100% scannable by any phone
-  const frame=document.getElementById('qrFrame');
-  frame.innerHTML='<canvas id="qrCanvas"></canvas>';
-  QRCode.toCanvas(document.getElementById('qrCanvas'), url, {
-    width:184, margin:2,
-    color:{dark:'#000000',light:'#ffffff'}
-  }, function(err){
-    if(err) console.error(err);
-  });
+  // Google Charts QR — works 100% on all phones, no library needed
+  const encoded = encodeURIComponent(url);
+  const qrImgUrl = `https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=${encoded}&choe=UTF-8&chld=H|1`;
 
-  // Store canvas data URL for printing
-  setTimeout(()=>{
-    const canvas=document.getElementById('qrCanvas');
-    const imgData=canvas?canvas.toDataURL('image/png'):'';
-    window._qrPrint={name:t.name,meta:`${t.bu} · Assembly ${t.assembly}`,project:t.project,url,imgData};
-  },300);
+  const frame=document.getElementById('qrFrame');
+  frame.innerHTML=`<img src="${qrImgUrl}" width="184" height="184" alt="QR Code" style="display:block;border-radius:4px"/>`;
+
+  window._qrPrint={
+    name:t.name,
+    meta:`${t.bu} · Assembly ${t.assembly}`,
+    project:t.project,
+    url,
+    qrImgUrl
+  };
 
   document.getElementById('qrModal').classList.add('open');
 }
@@ -801,7 +798,7 @@ hr{border:none;border-top:1px solid #e5e7eb;margin:14px 0}
 <div class="title">${d.name}</div>
 <div class="meta">${d.meta}</div>
 <div class="proj">${d.project}</div>
-<img class="qr-img" src="${d.imgData}" alt="QR Code"/>
+<img class="qr-img" src="${d.qrImgUrl}" alt="QR Code"/>
 <hr>
 <div class="url">${d.url}</div>
 <div class="note">Scan QR code to open tester specification</div>
