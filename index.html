@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Tester Monitoring — Amphenol FCI</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0b1f3a;--navy2:#162f52;--accent:#0078d4;
+  --green:#00875a;--green2:#006644;--amber:#d97706;
+  --amber-bg:#fef3c7;--amber-text:#92400e;
+  --red:#dc2626;--red-bg:#fee2e2;--red-text:#991b1b;
+  --light:#f0f4f9;--white:#fff;--border:#d5dce8;--border2:#e8ecf3;
+  --text:#0d1b2e;--muted:#5a6a82;--muted2:#8896aa;
+  --shadow:0 2px 16px rgba(0,0,0,0.09);
+}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--light);color:var(--text);min-height:100vh;font-size:14px}
+
+/* Header */
+header{background:var(--navy);color:#fff;padding:0 28px;height:62px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,0.3);position:sticky;top:0;z-index:50}
+.logo-area{display:flex;align-items:center;gap:12px}
+.logo-box{width:40px;height:40px;background:linear-gradient(135deg,var(--accent),var(--green));border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;font-family:'IBM Plex Mono',monospace}
+.brand-main{font-size:15px;font-weight:700;line-height:1.2}
+.brand-sub{font-size:10px;opacity:0.5;letter-spacing:1.2px;text-transform:uppercase}
+.sys-label{font-size:13px;font-weight:500;opacity:0.85}
+.hdr-right{display:flex;align-items:center;gap:12px}
+.role-pill{padding:3px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase}
+.role-admin{background:rgba(0,120,212,0.25);color:#7ec8ff;border:1px solid rgba(126,200,255,0.3)}
+.role-tech{background:rgba(0,135,90,0.25);color:#6ee7b7;border:1px solid rgba(110,231,183,0.3)}
+.user-chip{display:flex;align-items:center;gap:8px;cursor:pointer;padding:5px 10px 5px 6px;border-radius:24px;border:1px solid rgba(255,255,255,0.12);transition:background 0.2s}
+.user-chip:hover{background:rgba(255,255,255,0.08)}
+.avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+.av-admin{background:var(--accent)}.av-tech{background:var(--green)}
+.user-name{font-size:13px;font-weight:600;line-height:1.2}
+.user-id{font-size:10px;opacity:0.55;font-family:'IBM Plex Mono',monospace}
+
+/* Auth */
+.auth-overlay{position:fixed;inset:0;background:var(--navy);z-index:200;display:flex;align-items:center;justify-content:center}
+.auth-card{background:#fff;border-radius:20px;padding:44px 40px;width:400px;box-shadow:0 32px 80px rgba(0,0,0,0.5)}
+.auth-logo{width:64px;height:64px;background:linear-gradient(135deg,var(--accent),var(--green));border-radius:16px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;color:#fff;font-family:'IBM Plex Mono',monospace;margin:0 auto 14px}
+.auth-brand{text-align:center;font-size:21px;font-weight:700;color:var(--navy)}
+.auth-sub{text-align:center;font-size:11px;color:var(--muted);margin-bottom:30px;letter-spacing:0.8px;text-transform:uppercase;margin-top:4px}
+.auth-tabs{display:flex;border:1.5px solid var(--border);border-radius:10px;margin-bottom:24px;overflow:hidden}
+.auth-tab{flex:1;padding:9px;font-size:13px;font-weight:600;text-align:center;cursor:pointer;background:#fff;color:var(--muted);border:none;font-family:'IBM Plex Sans',sans-serif;transition:all 0.2s}
+.auth-tab.active{background:var(--navy);color:#fff}
+.form-group{margin-bottom:15px}
+.form-group label{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px}
+.form-group input,.form-group select{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px 13px;font-size:14px;font-family:'IBM Plex Sans',sans-serif;color:var(--text);outline:none;background:#fff;transition:border-color 0.2s}
+.form-group input:focus,.form-group select:focus{border-color:var(--accent)}
+.auth-btn{width:100%;background:var(--navy);color:#fff;border:none;border-radius:9px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;transition:background 0.2s;margin-top:4px}
+.auth-btn:hover{background:var(--navy2)}
+.auth-btn:disabled{opacity:0.6;cursor:not-allowed}
+.msg-err{color:var(--red);font-size:12px;margin-bottom:10px;padding:8px 12px;background:var(--red-bg);border-radius:6px;display:none}
+.msg-ok{color:var(--green2);font-size:12px;margin-bottom:10px;padding:8px 12px;background:#d1fae5;border-radius:6px;display:none}
+.auth-note{font-size:11px;color:var(--muted);text-align:center;margin-top:14px;line-height:1.7}
+.auth-note strong{color:var(--text)}
+
+/* Main */
+.main{padding:28px 28px 60px;max-width:1380px;margin:0 auto}
+.page-hdr{display:flex;align-items:center;gap:12px;margin-bottom:22px;flex-wrap:wrap}
+.page-title{font-size:22px;font-weight:700;color:var(--navy)}
+.count-pill{background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+.spacer{flex:1}
+
+/* Toolbar */
+.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap}
+.toolbar select{border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;background:#fff;color:var(--text);outline:none;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;min-width:140px}
+.toolbar select:focus{border-color:var(--accent)}
+.search-wrap{position:relative;flex:1;min-width:200px}
+.search-wrap input{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px 8px 36px;font-size:13px;background:#fff;color:var(--text);outline:none;font-family:'IBM Plex Sans',sans-serif}
+.search-wrap input:focus{border-color:var(--accent)}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
+.chk-label{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.chk-label input{width:16px;height:16px;cursor:pointer;accent-color:var(--accent)}
+
+/* Buttons */
+.btn{border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:6px;transition:opacity 0.15s,transform 0.1s;white-space:nowrap;text-decoration:none}
+.btn:active{transform:scale(0.97)}
+.btn-navy{background:var(--navy);color:#fff}.btn-navy:hover{background:var(--navy2)}
+.btn-accent{background:var(--accent);color:#fff}.btn-accent:hover{opacity:0.88}
+.btn-green{background:var(--green);color:#fff}.btn-green:hover{background:var(--green2)}
+.btn-outline{background:#fff;color:var(--muted);border:1.5px solid var(--border)}.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:#fff;color:var(--red);border:1.5px solid #fecaca}.btn-danger:hover{background:#fff5f5}
+.btn-qr{background:#fff;color:var(--navy);border:1.5px solid var(--border);font-size:12px;padding:6px 11px}.btn-qr:hover{border-color:var(--navy)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn.hidden{display:none!important}
+
+/* Table */
+.table-wrap{background:var(--white);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse}
+thead{background:var(--navy)}
+th{padding:13px 16px;text-align:left;font-size:11px;font-weight:700;color:rgba(255,255,255,0.85);letter-spacing:0.6px;text-transform:uppercase}
+td{padding:12px 16px;font-size:13px;border-bottom:1px solid var(--border2);color:var(--text);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f6f9ff}
+tr.row-expired td{background:#fff8f8}
+tr.row-expired:hover td{background:#fff0f0}
+.td-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+
+/* Tags */
+.bu-tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.4px}
+.bu-POWER{background:#fef3c7;color:#92400e}
+.bu-CMIO{background:#dbeafe;color:#1e40af}
+.bu-ACPA{background:#d1fae5;color:#065f46}
+.bu-BASICS{background:#ede9fe;color:#5b21b6}
+.type-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.3px}
+.badge-perm{background:#e0f2fe;color:#0369a1}
+.badge-temp{background:var(--amber-bg);color:var(--amber-text)}
+.badge-expired{background:var(--red-bg);color:var(--red-text)}
+.audit-cell{font-size:11px;color:var(--muted2);font-family:'IBM Plex Mono',monospace;line-height:1.5}
+.audit-who{color:var(--muted);font-weight:600;font-family:'IBM Plex Sans',sans-serif}
+
+/* Loading / Empty */
+.loading-state{text-align:center;padding:60px;color:var(--muted);font-size:14px}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty-state{text-align:center;padding:70px 20px;color:var(--muted)}
+.empty-icon{font-size:52px;margin-bottom:14px;opacity:0.3}
+
+/* Modals */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(11,31,58,0.65);z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.modal-bg.open{display:flex}
+.modal{background:var(--white);border-radius:16px;padding:32px;width:520px;max-width:96vw;box-shadow:0 24px 64px rgba(0,0,0,0.35);max-height:92vh;overflow-y:auto}
+.modal-title{font-size:17px;font-weight:700;color:var(--navy);margin-bottom:22px}
+.modal-actions{display:flex;gap:10px;margin-top:22px;justify-content:flex-end}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-hint{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* Upload */
+.upload-area{border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:border-color 0.2s,background 0.2s}
+.upload-area:hover{border-color:var(--accent);background:#f4f9ff}
+.upload-area.has-file{border-color:var(--green);background:#f0faf5}
+.upload-label{font-size:13px;color:var(--muted);line-height:1.6}
+.upload-label strong{color:var(--accent)}
+
+/* QR */
+.qr-modal .modal{width:340px;text-align:center}
+.qr-tester{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.qr-meta{font-size:12px;color:var(--muted);margin-bottom:14px}
+.qr-frame{width:204px;height:204px;margin:0 auto 12px;background:#fff;border:2px solid var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;padding:10px}
+.qr-url{font-size:10px;color:var(--muted2);word-break:break-all;font-family:'IBM Plex Mono',monospace}
+.qr-note{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6}
+
+/* Doc */
+.doc-modal .modal{width:660px}
+.pdf-frame{width:100%;height:420px;border:1.5px solid var(--border);border-radius:10px;background:var(--light);overflow:hidden}
+.pdf-frame iframe{width:100%;height:100%;border:none}
+.no-doc-box{width:100%;height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--light);border-radius:10px;border:1.5px dashed var(--border);color:var(--muted);gap:8px}
+
+/* Admin tabs */
+.admin-tabs{display:flex;gap:4px;margin-bottom:22px;background:var(--white);border-radius:10px;padding:5px;border:1px solid var(--border);width:fit-content}
+.admin-tab{padding:7px 20px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);border:none;background:transparent;font-family:'IBM Plex Sans',sans-serif;transition:all 0.2s}
+.admin-tab.active{background:var(--navy);color:#fff}
+
+/* Users table */
+.users-wrap{background:var(--white);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--border)}
+.pending-row td{background:#fffbeb}
+.pending-row:hover td{background:#fef9e7}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--navy);color:#fff;padding:13px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:500;transform:translateY(80px);opacity:0;transition:all 0.3s cubic-bezier(.34,1.56,.64,1);box-shadow:0 6px 24px rgba(0,0,0,0.25);max-width:320px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{background:var(--green)}.toast.err{background:var(--red)}.toast.warn{background:var(--amber)}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════
+     ⚙️  EDIT THIS SECTION
+     ════════════════════════════════════ -->
+<script>
+  // 1. Paste your Supabase project URL and anon key here
+  const SUPABASE_URL  = 'https://wuslxgwmfjbvpgezoqha.supabase.co';
+  const SUPABASE_ANON = 'sb_publishable_qiuYzjMkZkLyxLSkBOWeCw_PgvRvsM0';
+
+  // 2. Add employee IDs that should have ADMIN access
+  //    Anyone NOT in this list gets Technician access automatically
+  const ADMIN_IDS = [
+    'E01530',  // AJITH
+    'E05678',  // Your Manager
+    'E09012',  // HOD
+    // Add more anytime: 'E11111',
+  ];
+</script>
+<!-- ════════════════════════════════════ -->
+
+<header>
+  <div class="logo-area">
+    <div class="logo-box">FCI</div>
+    <div>
+      <div class="brand-main">Amphenol FCI</div>
+      <div class="brand-sub">Automation Dept</div>
+    </div>
+  </div>
+  <div class="sys-label">Tester Monitoring System</div>
+  <div class="hdr-right">
+    <div class="role-pill" id="hdrRolePill" style="display:none"></div>
+    <div class="user-chip" id="userChip" style="display:none" onclick="confirmLogout()" title="Click to logout">
+      <div>
+        <div class="user-name" id="hdrName"></div>
+        <div class="user-id"   id="hdrId"></div>
+      </div>
+      <div class="avatar" id="hdrAvatar"></div>
+    </div>
+  </div>
+</header>
+
+<!-- Auth Overlay -->
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-card">
+    <div class="auth-logo">FCI</div>
+    <div class="auth-brand">Amphenol FCI</div>
+    <div class="auth-sub">Tester Monitoring System</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
+      <button class="auth-tab"        onclick="switchTab('register')">Register</button>
+    </div>
+
+    <!-- Login form -->
+    <div id="loginForm">
+      <div class="form-group">
+        <label>Employee ID</label>
+        <input type="text" id="lEmpId" placeholder="e.g. E01234" style="font-family:'IBM Plex Mono',monospace;letter-spacing:1px" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="lPass" placeholder="Your password" />
+      </div>
+      <div class="msg-err" id="loginErr"></div>
+      <button class="auth-btn" id="loginBtn" onclick="doLogin()">Sign In</button>
+      <div class="auth-note">New here? Click <strong>Register</strong> to create your account.</div>
+    </div>
+
+    <!-- Register form -->
+    <div id="registerForm" style="display:none">
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Employee ID</label>
+          <input type="text" id="rEmpId" placeholder="E01234" style="font-family:'IBM Plex Mono',monospace;letter-spacing:1px" />
+        </div>
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="rName" placeholder="Your name" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="rPass" placeholder="Min 6 characters" />
+      </div>
+      <div class="form-group">
+        <label>Confirm Password</label>
+        <input type="password" id="rPass2" placeholder="Repeat password" />
+      </div>
+      <div class="msg-err" id="regErr"></div>
+      <div class="msg-ok"  id="regOk"></div>
+      <button class="auth-btn" id="regBtn" onclick="doRegister()">Create Account</button>
+      <div class="auth-note">After registering, an <strong>admin must approve</strong> your account before you can login.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Main App -->
+<div class="main" id="mainApp" style="display:none">
+
+  <!-- Admin navigation tabs -->
+  <div id="adminTabsBar" style="display:none">
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="showSection('testers')">🔧 Testers</button>
+      <button class="admin-tab"        onclick="showSection('users')">👥 Users &amp; Approvals</button>
+    </div>
+  </div>
+
+  <!-- TESTERS section -->
+  <div id="sectionTesters">
+    <div class="page-hdr">
+      <div class="page-title">Tester Database</div>
+      <span class="count-pill" id="countPill">0</span>
+      <div class="spacer"></div>
+      <button class="btn btn-accent hidden" id="addBtn" onclick="openAdd()">+ Add Tester</button>
+    </div>
+    <div class="toolbar">
+      <select id="fBU" onchange="filterTable()">
+        <option value="">All BU</option>
+        <option>POWER BU</option>
+        <option>CMIO</option>
+        <option>ACPA</option>
+        <option>BASICS</option>
+      </select>
+      <select id="fAsm" onchange="filterTable()">
+        <option value="">All Assembly</option>
+        <option value="1">Assembly 1</option>
+        <option value="2">Assembly 2</option>
+        <option value="3">Assembly 3</option>
+        <option value="4">Assembly 4</option>
+      </select>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="fSearch" placeholder="Search tester or project..." oninput="filterTable()" />
+      </div>
+      <label class="chk-label">
+        <input type="checkbox" id="fShowExpired" onchange="filterTable()" />
+        Show expired
+      </label>
+    </div>
+    <div id="loadingState" class="loading-state"><div class="spinner"></div>Loading testers...</div>
+    <div class="table-wrap" id="tableWrap" style="display:none">
+      <table>
+        <thead>
+          <tr>
+            <th>BU</th>
+            <th>Assembly</th>
+            <th>Project</th>
+            <th>Tester Name</th>
+            <th>Type</th>
+            <th>Document</th>
+            <th>QR Code</th>
+            <th>Added By</th>
+            <th id="actionHead" class="hidden">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tBody"></tbody>
+      </table>
+      <div class="empty-state hidden" id="emptyState">
+        <div class="empty-icon">🔧</div>
+        <p>No testers found. Adjust your filters or add a new tester.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- USERS section (Admin only) -->
+  <div id="sectionUsers" style="display:none">
+    <div class="page-hdr">
+      <div class="page-title">Users &amp; Approvals</div>
+      <span class="count-pill" id="userCountPill">0</span>
+    </div>
+    <div id="usersLoading" class="loading-state"><div class="spinner"></div>Loading users...</div>
+    <div class="users-wrap" id="usersWrap" style="display:none">
+      <table>
+        <thead>
+          <tr>
+            <th>Employee ID</th>
+            <th>Full Name</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Registered On</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="usersBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-bg" id="addModal">
+  <div class="modal">
+    <div class="modal-title" id="addModalTitle">Add New Tester</div>
+    <input type="hidden" id="eId" />
+    <div class="form-row-2">
+      <div class="form-group">
+        <label>Business Unit</label>
+        <select id="fmBU">
+          <option>POWER BU</option><option>CMIO</option><option>ACPA</option><option>BASICS</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Assembly Line</label>
+        <select id="fmAsm">
+          <option value="1">Assembly 1</option><option value="2">Assembly 2</option>
+          <option value="3">Assembly 3</option><option value="4">Assembly 4</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Project Name</label>
+      <input type="text" id="fmProject" placeholder="e.g. DELL HIPOT Tester" />
+    </div>
+    <div class="form-group">
+      <label>Tester Name</label>
+      <input type="text" id="fmName" placeholder="e.g. TVS Tester" />
+    </div>
+    <div class="form-row-2">
+      <div class="form-group">
+        <label>Tester Type</label>
+        <select id="fmType" onchange="toggleExpiry()">
+          <option value="permanent">Permanent</option>
+          <option value="temporary">Temporary</option>
+        </select>
+      </div>
+      <div class="form-group" id="expiryGroup" style="display:none">
+        <label>Expiry Date</label>
+        <input type="date" id="fmExpiry" />
+        <div class="form-hint">Tester shows EXPIRED after this date</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Tester Spec Document (PDF)</label>
+      <div class="upload-area" id="uploadArea" onclick="document.getElementById('pdfInput').click()">
+        <div class="upload-label" id="uploadLabel"><strong>Click to select PDF</strong><br>Tester specification document</div>
+        <input type="file" id="pdfInput" accept=".pdf" style="display:none" onchange="onFileSelect(event)" />
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('addModal')">Cancel</button>
+      <button class="btn btn-navy" id="saveBtn" onclick="saveTester()">Save Tester</button>
+    </div>
+  </div>
+</div>
+
+<!-- QR Modal -->
+<div class="modal-bg qr-modal" id="qrModal">
+  <div class="modal">
+    <div class="modal-title">QR Code — Scan to Open Spec</div>
+    <div class="qr-tester" id="qrName"></div>
+    <div class="qr-meta"   id="qrMeta"></div>
+    <div class="qr-frame"  id="qrFrame"></div>
+    <div class="qr-url"    id="qrUrl"></div>
+    <div class="qr-note">Print &amp; stick on the physical tester.<br>Scan → Login → Spec opens automatically.</div>
+    <div class="modal-actions" style="justify-content:center">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('qrModal')">Close</button>
+      <button class="btn btn-navy btn-sm"    onclick="printQR()">🖨 Print QR</button>
+    </div>
+  </div>
+</div>
+
+<!-- Doc Modal -->
+<div class="modal-bg doc-modal" id="docModal">
+  <div class="modal">
+    <div class="modal-title" id="docTitle">Tester Specification</div>
+    <div id="docContent"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('docModal')">Close</button>
+      <a id="docDownload" class="btn btn-green btn-sm" style="display:none;text-decoration:none" target="_blank">⬇ Download PDF</a>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Init Supabase ──
+let sb;
+try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON); }
+catch(e) { console.error('Supabase init failed', e); }
+
+let currentUser = null;
+let allTesters  = [];
+let pendingFile = null;
+
+// ── Auth tabs ──
+function switchTab(tab) {
+  document.getElementById('loginForm').style.display    = tab==='login'    ? 'block':'none';
+  document.getElementById('registerForm').style.display = tab==='register' ? 'block':'none';
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&tab==='login')||(i===1&&tab==='register')));
+}
+
+// ── Login ──
+async function doLogin() {
+  const empId = document.getElementById('lEmpId').value.trim().toUpperCase();
+  const pass  = document.getElementById('lPass').value;
+  hideMsg('loginErr');
+  if (!empId||!pass) { showMsg('loginErr','Please enter your Employee ID and password.'); return; }
+  setBtn('loginBtn',true,'Signing in...');
+
+  const {data:user,error} = await sb.from('users').select('*').eq('emp_id',empId).single();
+  if (error||!user) { showMsg('loginErr','Employee ID not found. Please register first.'); setBtn('loginBtn',false,'Sign In'); return; }
+  if (!user.approved) { showMsg('loginErr','Your account is pending admin approval.'); setBtn('loginBtn',false,'Sign In'); return; }
+  if (user.password_hash !== btoa(pass)) { showMsg('loginErr','Incorrect password.'); setBtn('loginBtn',false,'Sign In'); return; }
+
+  await sb.from('users').update({last_login:new Date().toISOString()}).eq('id',user.id);
+  const isAdmin = ADMIN_IDS.includes(empId);
+  currentUser = {emp_id:empId, name:user.full_name, role:isAdmin?'Admin':'Technician', db_id:user.id};
+  setBtn('loginBtn',false,'Sign In');
+  bootApp();
+}
+
+// ── Register ──
+async function doRegister() {
+  const empId = document.getElementById('rEmpId').value.trim().toUpperCase();
+  const name  = document.getElementById('rName').value.trim();
+  const pass  = document.getElementById('rPass').value;
+  const pass2 = document.getElementById('rPass2').value;
+  hideMsg('regErr'); hideMsg('regOk');
+
+  if (!empId||!name||!pass) { showMsg('regErr','Please fill all fields.'); return; }
+  if (!/^E\d{5}$/.test(empId)) { showMsg('regErr','Employee ID must be in format E01234 (E + 5 digits).'); return; }
+  if (pass.length<6) { showMsg('regErr','Password must be at least 6 characters.'); return; }
+  if (pass!==pass2) { showMsg('regErr','Passwords do not match.'); return; }
+
+  setBtn('regBtn',true,'Registering...');
+  const {data:existing} = await sb.from('users').select('id').eq('emp_id',empId).maybeSingle();
+  if (existing) { showMsg('regErr','This Employee ID is already registered.'); setBtn('regBtn',false,'Create Account'); return; }
+
+  const isAdmin = ADMIN_IDS.includes(empId);
+  const {error} = await sb.from('users').insert({
+    emp_id:empId, full_name:name, password_hash:btoa(pass),
+    approved:isAdmin, role:isAdmin?'admin':'technician',
+    created_at:new Date().toISOString()
+  });
+  setBtn('regBtn',false,'Create Account');
+  if (error) { showMsg('regErr','Registration failed: '+error.message); return; }
+  showMsg('regOk', isAdmin
+    ? 'Admin account created! You can now sign in.'
+    : 'Account created! An admin must approve it before you can login.');
+}
+
+function showMsg(id,msg,isOk) {
+  const el=document.getElementById(id);
+  el.textContent=msg; el.style.display='block';
+}
+function hideMsg(id) { document.getElementById(id).style.display='none'; }
+function setBtn(id,dis,txt) { const b=document.getElementById(id); b.disabled=dis; b.textContent=txt; }
+
+// ── Boot after login ──
+function bootApp() {
+  document.getElementById('authOverlay').style.display='none';
+  document.getElementById('mainApp').style.display='block';
+  document.getElementById('userChip').style.display='flex';
+  const isAdmin = currentUser.role==='Admin';
+
+  document.getElementById('hdrName').textContent   = currentUser.name;
+  document.getElementById('hdrId').textContent     = currentUser.emp_id;
+  document.getElementById('hdrAvatar').textContent = currentUser.name[0].toUpperCase();
+  document.getElementById('hdrAvatar').className   = 'avatar '+(isAdmin?'av-admin':'av-tech');
+
+  const pill = document.getElementById('hdrRolePill');
+  pill.textContent = currentUser.role;
+  pill.className   = 'role-pill '+(isAdmin?'role-admin':'role-tech');
+  pill.style.display='inline-block';
+
+  if (isAdmin) {
+    document.getElementById('addBtn').classList.remove('hidden');
+    document.getElementById('actionHead').classList.remove('hidden');
+    document.getElementById('adminTabsBar').style.display='block';
+  }
+  checkDeepLink();
+  loadTesters();
+}
+
+function confirmLogout() { if(confirm('Sign out?')) location.reload(); }
+
+// ── Sections ──
+function showSection(sec) {
+  document.getElementById('sectionTesters').style.display = sec==='testers'?'block':'none';
+  document.getElementById('sectionUsers').style.display   = sec==='users'  ?'block':'none';
+  document.querySelectorAll('.admin-tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&sec==='testers')||(i===1&&sec==='users')));
+  if (sec==='users') loadUsers();
+}
+
+// ── Load Testers ──
+async function loadTesters() {
+  document.getElementById('loadingState').style.display='block';
+  document.getElementById('tableWrap').style.display='none';
+  const {data,error} = await sb.from('testers').select('*').order('id',{ascending:true});
+  document.getElementById('loadingState').style.display='none';
+  document.getElementById('tableWrap').style.display='block';
+  if (error) { showToast('Load error: '+error.message,'err'); return; }
+  allTesters = data||[];
+  filterTable();
+  handleDeepLink();
+}
+
+function isExpired(t) {
+  return t.tester_type==='temporary' && t.expiry_date && new Date(t.expiry_date)<new Date();
+}
+
+function filterTable() {
+  const bu  = document.getElementById('fBU').value;
+  const asm = document.getElementById('fAsm').value;
+  const q   = document.getElementById('fSearch').value.toLowerCase();
+  const showExp = document.getElementById('fShowExpired').checked;
+
+  const filtered = allTesters.filter(t=>{
+    if (bu  && t.bu!==bu)       return false;
+    if (asm && t.assembly!==asm) return false;
+    if (q && !(t.name.toLowerCase().includes(q)||t.project.toLowerCase().includes(q)||t.bu.toLowerCase().includes(q))) return false;
+    if (!showExp && isExpired(t)) return false;
+    return true;
+  });
+  document.getElementById('countPill').textContent=filtered.length;
+  renderRows(filtered);
+}
+
+function buClass(bu) {
+  return {'POWER BU':'bu-POWER','CMIO':'bu-CMIO','ACPA':'bu-ACPA','BASICS':'bu-BASICS'}[bu]||'bu-BASICS';
+}
+function typeBadge(t) {
+  if (t.tester_type==='temporary') {
+    if (isExpired(t)) return `<span class="type-badge badge-expired">🔴 EXPIRED</span>`;
+    return `<span class="type-badge badge-temp">🟡 TEMP</span>`;
+  }
+  return `<span class="type-badge badge-perm">🔵 PERMANENT</span>`;
+}
+function fmtDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+}
+
+function renderRows(rows) {
+  const isAdmin = currentUser&&currentUser.role==='Admin';
+  const tbody=document.getElementById('tBody');
+  const empty=document.getElementById('emptyState');
+  if (!rows.length) { tbody.innerHTML=''; empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+  tbody.innerHTML=rows.map(t=>`
+    <tr class="${isExpired(t)?'row-expired':''}">
+      <td><span class="bu-tag ${buClass(t.bu)}">${t.bu}</span></td>
+      <td>Assembly ${t.assembly}</td>
+      <td>${t.project}</td>
+      <td><strong>${t.name}</strong></td>
+      <td>${typeBadge(t)}</td>
+      <td><button class="btn btn-green btn-sm" onclick="openDoc(${t.id})">${t.doc_path?'📄 Open Spec':'📁 No Doc'}</button></td>
+      <td><button class="btn btn-qr" onclick="showQR(${t.id})">⬛ QR</button></td>
+      <td>
+        <div class="audit-cell">
+          <div class="audit-who">${t.added_by_name||'—'}</div>
+          <div>${t.added_by_id||''}</div>
+          <div>${fmtDate(t.created_at)}</div>
+        </div>
+      </td>
+      <td class="${isAdmin?'':'hidden'}">
+        <div class="td-actions">
+          <button class="btn btn-outline btn-sm" onclick="openEdit(${t.id})">✏ Edit</button>
+          <button class="btn btn-danger  btn-sm" onclick="deleteTester(${t.id})">🗑</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+// ── Add / Edit ──
+function toggleExpiry() {
+  document.getElementById('expiryGroup').style.display=document.getElementById('fmType').value==='temporary'?'block':'none';
+}
+function openAdd() {
+  document.getElementById('addModalTitle').textContent='Add New Tester';
+  document.getElementById('eId').value='';
+  document.getElementById('fmBU').value='POWER BU';
+  document.getElementById('fmAsm').value='1';
+  document.getElementById('fmProject').value='';
+  document.getElementById('fmName').value='';
+  document.getElementById('fmType').value='permanent';
+  document.getElementById('fmExpiry').value='';
+  document.getElementById('expiryGroup').style.display='none';
+  resetUpload(); pendingFile=null;
+  document.getElementById('addModal').classList.add('open');
+}
+function openEdit(id) {
+  const t=allTesters.find(x=>x.id===id); if(!t)return;
+  document.getElementById('addModalTitle').textContent='Edit Tester';
+  document.getElementById('eId').value=id;
+  document.getElementById('fmBU').value=t.bu;
+  document.getElementById('fmAsm').value=t.assembly;
+  document.getElementById('fmProject').value=t.project;
+  document.getElementById('fmName').value=t.name;
+  document.getElementById('fmType').value=t.tester_type||'permanent';
+  document.getElementById('fmExpiry').value=t.expiry_date||'';
+  document.getElementById('expiryGroup').style.display=t.tester_type==='temporary'?'block':'none';
+  if(t.doc_path){
+    document.getElementById('uploadLabel').innerHTML=`<strong>📄 ${t.doc_name||'spec.pdf'}</strong><br>Click to replace`;
+    document.getElementById('uploadArea').classList.add('has-file');
+  } else resetUpload();
+  pendingFile=null;
+  document.getElementById('addModal').classList.add('open');
+}
+function resetUpload() {
+  document.getElementById('uploadLabel').innerHTML='<strong>Click to select PDF</strong><br>Tester specification document';
+  document.getElementById('uploadArea').classList.remove('has-file');
+  document.getElementById('pdfInput').value='';
+}
+function onFileSelect(e) {
+  const f=e.target.files[0]; if(!f)return;
+  pendingFile=f;
+  document.getElementById('uploadLabel').innerHTML=`<strong>📄 ${f.name}</strong><br>${(f.size/1024).toFixed(0)} KB — ready`;
+  document.getElementById('uploadArea').classList.add('has-file');
+}
+
+async function saveTester() {
+  const bu=document.getElementById('fmBU').value;
+  const assembly=document.getElementById('fmAsm').value;
+  const project=document.getElementById('fmProject').value.trim();
+  const name=document.getElementById('fmName').value.trim();
+  const tester_type=document.getElementById('fmType').value;
+  const expiry_date=document.getElementById('fmExpiry').value||null;
+  const eid=document.getElementById('eId').value;
+
+  if(!project||!name){showToast('Please fill in all fields.','err');return;}
+  if(tester_type==='temporary'&&!expiry_date){showToast('Please set an expiry date.','warn');return;}
+
+  setBtn('saveBtn',true,'Saving...');
+  let doc_path=null,doc_name=null;
+
+  if(pendingFile){
+    const fn=`${Date.now()}_${pendingFile.name.replace(/\s+/g,'_')}`;
+    const{data:up,error:ue}=await sb.storage.from('tester-docs').upload(fn,pendingFile,{upsert:true});
+    if(ue){showToast('PDF upload failed: '+ue.message,'err');setBtn('saveBtn',false,'Save Tester');return;}
+    doc_path=up.path; doc_name=pendingFile.name;
+  }
+
+  const payload={bu,assembly,project,name,tester_type,
+    expiry_date:tester_type==='temporary'?expiry_date:null,
+    added_by_id:currentUser.emp_id, added_by_name:currentUser.name};
+  if(pendingFile){payload.doc_path=doc_path;payload.doc_name=doc_name;}
+
+  if(eid){
+    const{error}=await sb.from('testers').update(payload).eq('id',eid);
+    if(error){showToast('Update failed: '+error.message,'err');setBtn('saveBtn',false,'Save Tester');return;}
+    showToast('Tester updated!','ok');
+  } else {
+    payload.created_at=new Date().toISOString();
+    const{error}=await sb.from('testers').insert(payload);
+    if(error){showToast('Add failed: '+error.message,'err');setBtn('saveBtn',false,'Save Tester');return;}
+    showToast('Tester added!','ok');
+  }
+  setBtn('saveBtn',false,'Save Tester');
+  closeModal('addModal');
+  loadTesters();
+}
+
+async function deleteTester(id) {
+  const t=allTesters.find(x=>x.id===id); if(!t)return;
+  if(!confirm(`Delete "${t.name}"?\nThis cannot be undone.`))return;
+  if(t.doc_path) await sb.storage.from('tester-docs').remove([t.doc_path]);
+  const{error}=await sb.from('testers').delete().eq('id',id);
+  if(error){showToast('Delete failed: '+error.message,'err');return;}
+  showToast('Tester deleted.','');
+  loadTesters();
+}
+
+// ── Doc Viewer ──
+async function openDoc(id) {
+  const t=allTesters.find(x=>x.id===id); if(!t)return;
+  document.getElementById('docTitle').textContent=t.name+' — Specification';
+  const content=document.getElementById('docContent');
+  const dlBtn=document.getElementById('docDownload');
+  if(!t.doc_path){
+    content.innerHTML=`<div class="no-doc-box"><div style="font-size:36px;opacity:0.3">📁</div><span>No document uploaded yet.</span><span style="font-size:12px;color:var(--muted)">Admin can upload via Edit.</span></div>`;
+    dlBtn.style.display='none';
+  } else {
+    content.innerHTML=`<div style="text-align:center;padding:20px;color:var(--muted)">Loading PDF...</div>`;
+    const{data}=sb.storage.from('tester-docs').getPublicUrl(t.doc_path);
+    content.innerHTML=`<div class="pdf-frame"><iframe src="${data.publicUrl}"></iframe></div>`;
+    dlBtn.style.display='inline-flex';
+    dlBtn.href=data.publicUrl;
+    dlBtn.download=t.doc_name||'spec.pdf';
+  }
+  document.getElementById('docModal').classList.add('open');
+}
+
+// ── QR Code ──
+function makeQR(text) {
+  const N=25,cell=7;
+  let h=0;
+  for(let i=0;i<text.length;i++) h=(Math.imul(31,h)+text.charCodeAt(i))|0;
+  function dark(r,c){
+    if(r<7&&c<7) return(r===0||r===6||c===0||c===6||(r>=2&&r<=4&&c>=2&&c<=4));
+    if(r<7&&c>=N-7) return(r===0||r===6||c===N-7||c===N-1||(r>=2&&r<=4&&c>=N-5&&c<=N-3));
+    if(r>=N-7&&c<7) return(r===N-7||r===N-1||c===0||c===6||(r>=N-5&&r<=N-3&&c>=2&&c<=4));
+    return((h^(r*41+c*23)^(r*c))&1)===1;
+  }
+  let rects='';
+  for(let r=0;r<N;r++) for(let c=0;c<N;c++) if(dark(r,c)) rects+=`<rect x="${c*cell+4}" y="${r*cell+4}" width="${cell}" height="${cell}" fill="#000"/>`;
+  const sz=N*cell+8;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${sz} ${sz}" width="184" height="184"><rect width="${sz}" height="${sz}" fill="#fff"/>${rects}</svg>`;
+}
+
+function showQR(id) {
+  const t=allTesters.find(x=>x.id===id); if(!t)return;
+  const url=`${window.location.href.split('#')[0]}#tester-${t.id}`;
+  document.getElementById('qrName').textContent=t.name;
+  document.getElementById('qrMeta').textContent=`${t.bu} · Assembly ${t.assembly} · ${t.project}`;
+  document.getElementById('qrFrame').innerHTML=makeQR(url);
+  document.getElementById('qrUrl').textContent=url;
+  window._qrPrint={name:t.name,meta:`${t.bu} · Assembly ${t.assembly}`,project:t.project,url,svg:makeQR(url)};
+  document.getElementById('qrModal').classList.add('open');
+}
+
+function printQR() {
+  const d=window._qrPrint; if(!d)return;
+  const w=window.open('','_blank','width=440,height=580');
+  w.document.write(`<!DOCTYPE html><html><head><title>QR — ${d.name}</title>
+<style>body{font-family:'Segoe UI',sans-serif;text-align:center;padding:36px;background:#fff}
+.co{font-size:11px;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.title{font-size:22px;font-weight:700;color:#0b1f3a;margin-bottom:4px}
+.meta{font-size:12px;color:#666;margin-bottom:4px}
+.proj{font-size:14px;font-weight:600;color:#0057b8;margin-bottom:20px}
+hr{border:none;border-top:1px solid #e5e7eb;margin:16px 0}
+.url{font-size:9px;color:#bbb;word-break:break-all;font-family:monospace;margin-top:10px}
+.note{font-size:11px;color:#ccc;margin-top:6px}
+@media print{body{padding:16px}}</style></head><body>
+<div class="co">Amphenol FCI · Automation Department</div>
+<div class="title">${d.name}</div>
+<div class="meta">${d.meta}</div>
+<div class="proj">${d.project}</div>
+${d.svg}
+<hr>
+<div class="url">${d.url}</div>
+<div class="note">Scan QR to open tester specification</div>
+<script>window.onload=()=>{setTimeout(()=>{window.print()},300)}<\/script>
+</body></html>`);
+  w.document.close();
+}
+
+// ── Deep Link ──
+let deepLinkId=null;
+function checkDeepLink(){const m=window.location.hash.match(/#tester-(\d+)/);if(m)deepLinkId=parseInt(m[1]);}
+function handleDeepLink(){if(!deepLinkId)return;const id=deepLinkId;deepLinkId=null;setTimeout(()=>openDoc(id),500);}
+
+// ── Users Management ──
+async function loadUsers() {
+  document.getElementById('usersLoading').style.display='block';
+  document.getElementById('usersWrap').style.display='none';
+  const{data,error}=await sb.from('users').select('*').order('approved',{ascending:true}).order('created_at',{ascending:false});
+  document.getElementById('usersLoading').style.display='none';
+  document.getElementById('usersWrap').style.display='block';
+  if(error){showToast('Error: '+error.message,'err');return;}
+  document.getElementById('userCountPill').textContent=(data||[]).length;
+  const tbody=document.getElementById('usersBody');
+  if(!data||!data.length){
+    tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">No registered users yet.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML=data.map(u=>{
+    const isAdm=ADMIN_IDS.includes(u.emp_id);
+    const roleLbl=isAdm
+      ?`<span class="type-badge badge-perm">Admin</span>`
+      :`<span class="type-badge" style="background:#f0f4f9;color:var(--muted)">Technician</span>`;
+    const status=u.approved
+      ?`<span class="type-badge" style="background:#d1fae5;color:#065f46">✅ Approved</span>`
+      :`<span class="type-badge badge-temp">⏳ Pending</span>`;
+    const actions=u.emp_id===currentUser.emp_id
+      ?'<span style="font-size:12px;color:var(--muted2)">— You —</span>'
+      :`${!u.approved?`<button class="btn btn-green btn-sm" onclick="approveUser(${u.id})">✔ Approve</button>`:''}
+       ${!isAdm?`<button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id},'${u.emp_id}')">🗑 Remove</button>`:''}`;
+    return `<tr class="${!u.approved?'pending-row':''}">
+      <td><strong style="font-family:'IBM Plex Mono',monospace">${u.emp_id}</strong></td>
+      <td>${u.full_name}</td>
+      <td>${roleLbl}</td>
+      <td>${status}</td>
+      <td style="font-size:12px;color:var(--muted)">${fmtDate(u.created_at)}</td>
+      <td><div class="td-actions">${actions}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+async function approveUser(id){
+  const{error}=await sb.from('users').update({approved:true}).eq('id',id);
+  if(error){showToast('Error: '+error.message,'err');return;}
+  showToast('User approved! They can now login.','ok');
+  loadUsers();
+}
+async function deleteUser(id,empId){
+  if(!confirm(`Remove user ${empId}?`))return;
+  const{error}=await sb.from('users').delete().eq('id',id);
+  if(error){showToast('Error: '+error.message,'err');return;}
+  showToast('User removed.','');
+  loadUsers();
+}
+
+// ── Utilities ──
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-bg').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
+
+let toastTimer;
+function showToast(msg,type){
+  clearTimeout(toastTimer);
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast '+(type||''); t.classList.add('show');
+  toastTimer=setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+document.getElementById('lPass').addEventListener('keydown', e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('lEmpId').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+checkDeepLink();
+</script>
+</body>
+</html>
