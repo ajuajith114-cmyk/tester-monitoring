@@ -753,64 +753,72 @@ async function openDoc(id){
 // ── QR ──
 function showQR(id){
   const t=allTesters.find(x=>x.id===id); if(!t)return;
-  const url=`${window.location.href.split('#')[0]}#tester-${t.id}`;
+
+  // This is the URL encoded in QR — when scanned opens this page with tester ID
+  const base=window.location.href.split('?')[0].split('#')[0];
+  const url=`${base}?tester=${t.id}`;
+
   document.getElementById('qrName').textContent=t.name;
   document.getElementById('qrMeta').textContent=`${t.bu} · Assembly ${t.assembly} · ${t.project}`;
   document.getElementById('qrUrl').textContent=url;
 
-  // Google Charts QR — works 100% on all phones, no library needed
-  const encoded = encodeURIComponent(url);
-  const qrImgUrl = `https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=${encoded}&choe=UTF-8&chld=H|1`;
-
+  // Generate QR using qr-server API — simple image, always works
   const frame=document.getElementById('qrFrame');
-  frame.innerHTML=`<img src="${qrImgUrl}" width="184" height="184" alt="QR Code" style="display:block;border-radius:4px"/>`;
+  const qrSrc=`https://api.qrserver.com/v1/create-qr-code/?size=184x184&data=${encodeURIComponent(url)}&ecc=H&margin=1`;
+  frame.innerHTML=`<img src="${qrSrc}" width="184" height="184" alt="QR Code" style="border-radius:6px;display:block" onerror="this.src='https://chart.googleapis.com/chart?chs=184x184&cht=qr&chl=${encodeURIComponent(url)}'"/>`;
 
-  window._qrPrint={
-    name:t.name,
-    meta:`${t.bu} · Assembly ${t.assembly}`,
-    project:t.project,
-    url,
-    qrImgUrl
-  };
-
+  window._qrPrint={name:t.name, bu:t.bu, asm:t.assembly, project:t.project, url, qrSrc};
   document.getElementById('qrModal').classList.add('open');
 }
 
 function printQR(){
   const d=window._qrPrint; if(!d)return;
-  const w=window.open('','_blank','width=440,height=620');
+  const w=window.open('','_blank','width=400,height=560');
   w.document.write(`<!DOCTYPE html><html><head><title>QR — ${d.name}</title>
 <style>
-body{font-family:'Segoe UI',sans-serif;text-align:center;padding:36px;background:#fff}
-.logo{width:60px;height:60px;object-fit:contain;margin-bottom:8px}
-.co{font-size:11px;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
-.title{font-size:22px;font-weight:700;color:#0b1f3a;margin-bottom:4px}
-.meta{font-size:12px;color:#666;margin-bottom:4px}
-.proj{font-size:14px;font-weight:600;color:#0057b8;margin-bottom:16px}
-.qr-img{width:200px;height:200px}
-hr{border:none;border-top:1px solid #e5e7eb;margin:14px 0}
-.url{font-size:9px;color:#bbb;word-break:break-all;font-family:monospace;margin-top:8px}
-.note{font-size:11px;color:#aaa;margin-top:6px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;text-align:center;padding:28px 20px;background:#fff}
+.logo{width:64px;height:64px;object-fit:contain;margin-bottom:8px;border-radius:10px}
+.company{font-size:10px;color:#999;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2px}
+.tester{font-size:20px;font-weight:700;color:#0b1f3a;margin-bottom:3px}
+.meta{font-size:11px;color:#666;margin-bottom:2px}
+.project{font-size:12px;font-weight:600;color:#0057b8;margin-bottom:14px}
+.qr-img{width:190px;height:190px;border:1px solid #eee;border-radius:8px;padding:4px;background:#fff}
+.divider{border:none;border-top:1px solid #eee;margin:12px auto;width:80%}
+.scan-note{font-size:11px;color:#999;margin-top:8px}
+.url-text{font-size:8px;color:#ccc;word-break:break-all;margin-top:6px;font-family:monospace}
 @media print{body{padding:16px}}
-</style></head><body>
-<img class="logo" src="${LOGO_URL}" alt="logo"/>
-<div class="co">Amphenol FCI · Automation</div>
-<div class="title">${d.name}</div>
-<div class="meta">${d.meta}</div>
-<div class="proj">${d.project}</div>
-<img class="qr-img" src="${d.qrImgUrl}" alt="QR Code"/>
-<hr>
-<div class="url">${d.url}</div>
-<div class="note">Scan QR code to open tester specification</div>
-<script>window.onload=()=>{setTimeout(()=>{window.print()},400)}<\/script>
+</style>
+</head><body>
+<img class="logo" src="${LOGO_URL}" alt="Amphenol FCI"/>
+<div class="company">Amphenol FCI &nbsp;·&nbsp; Automation</div>
+<div class="tester">${d.name}</div>
+<div class="meta">${d.bu} &nbsp;·&nbsp; Assembly ${d.asm}</div>
+<div class="project">${d.project}</div>
+<img class="qr-img" src="${d.qrSrc}" alt="QR Code"/>
+<hr class="divider"/>
+<div class="scan-note">📱 Scan to open tester specification</div>
+<div class="url-text">${d.url}</div>
+<script>window.onload=()=>{setTimeout(()=>{window.print()},500)}<\/script>
 </body></html>`);
   w.document.close();
 }
 
 // ── Deep Link ──
 let deepLinkId=null;
-function checkDeepLink(){const m=window.location.hash.match(/#tester-(\d+)/);if(m)deepLinkId=parseInt(m[1]);}
-function handleDeepLink(){if(!deepLinkId)return;const id=deepLinkId;deepLinkId=null;setTimeout(()=>openDoc(id),500);}
+function checkDeepLink(){
+  // Check ?tester=ID in URL (from QR code scan)
+  const params=new URLSearchParams(window.location.search);
+  const tid=params.get('tester');
+  if(tid) deepLinkId=parseInt(tid);
+}
+function handleDeepLink(){
+  if(!deepLinkId)return;
+  const id=deepLinkId;
+  deepLinkId=null;
+  // Auto open the doc for that tester after login
+  setTimeout(()=>openDoc(id),600);
+}
 
 // ── Users ──
 async function loadUsers(){
