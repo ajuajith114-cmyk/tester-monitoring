@@ -753,46 +753,50 @@ async function openDoc(id){
 // ── QR ──
 function showQR(id){
   const t=allTesters.find(x=>x.id===id); if(!t)return;
-  const base=window.location.href.split('?')[0].split('#')[0];
-  const url=`${base}?tester=${t.id}`;
 
-  document.getElementById('qrName').textContent=t.name;
-  document.getElementById('qrMeta').textContent=`${t.bu} · Assembly ${t.assembly} · ${t.project}`;
-  document.getElementById('qrUrl').textContent=url;
+  // QR code contains the DIRECT PDF link from Supabase
+  // Scan QR → PDF opens directly on phone — no login needed!
+  let qrUrl = '';
+  if(t.doc_path){
+    const {data} = sb.storage.from('tester-docs').getPublicUrl(t.doc_path);
+    qrUrl = data.publicUrl;
+  } else {
+    qrUrl = window.location.href.split('?')[0] + '?tester=' + t.id;
+  }
 
-  const frame=document.getElementById('qrFrame');
-  frame.innerHTML='';
-  const canvas=document.createElement('canvas');
-  frame.appendChild(canvas);
-  generateQR(canvas, url, 184);
+  document.getElementById('qrName').textContent = t.name;
+  document.getElementById('qrMeta').textContent = `${t.bu} · Assembly ${t.assembly} · ${t.project}`;
 
-  setTimeout(()=>{
-    window._qrPrint={
-      name:t.name, bu:t.bu, asm:t.assembly,
-      project:t.project, url,
-      img: canvas.toDataURL('image/png')
-    };
-  }, 200);
+  // Use QR Server API - free and reliable
+  const qrImgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrUrl)}&ecc=M&margin=2`;
+
+  const frame = document.getElementById('qrFrame');
+  frame.innerHTML = `<img src="${qrImgSrc}" width="184" height="184" style="border-radius:6px;display:block" />`;
+
+  document.getElementById('qrUrl').textContent = qrUrl;
+
+  window._qrPrint = {
+    name: t.name, bu: t.bu, asm: t.assembly,
+    project: t.project, url: qrUrl, qrImgSrc
+  };
 
   document.getElementById('qrModal').classList.add('open');
 }
 
 function printQR(){
-  const d=window._qrPrint; if(!d)return;
-  const w=window.open('','_blank','width=400,height=560');
+  const d = window._qrPrint; if(!d) return;
+  const w = window.open('','_blank','width=400,height=540');
   w.document.write(`<!DOCTYPE html><html><head><title>QR - ${d.name}</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',sans-serif;text-align:center;padding:28px 20px;background:#fff}
-.logo{width:64px;height:64px;object-fit:contain;margin-bottom:8px;border-radius:10px}
+body{font-family:'Segoe UI',sans-serif;text-align:center;padding:24px;background:#fff}
+.logo{width:60px;height:60px;object-fit:contain;margin-bottom:8px;border-radius:10px}
 .company{font-size:10px;color:#999;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px}
 .tname{font-size:20px;font-weight:700;color:#0b1f3a;margin-bottom:3px}
 .meta{font-size:11px;color:#666;margin-bottom:2px}
-.proj{font-size:12px;font-weight:600;color:#0057b8;margin-bottom:14px}
-.qrimg{width:190px;height:190px}
+.proj{font-size:13px;font-weight:600;color:#0057b8;margin-bottom:14px}
+.qrimg{width:200px;height:200px}
 hr{border:none;border-top:1px dashed #ddd;margin:12px auto;width:80%}
-.note{font-size:11px;color:#999;margin-top:8px}
-.urltext{font-size:8px;color:#ccc;word-break:break-all;margin-top:6px;font-family:monospace}
+.note{font-size:12px;color:#888;margin-top:8px}
 @media print{body{padding:12px}}
 </style></head><body>
 <img class="logo" src="${LOGO_URL}" alt="logo"/>
@@ -800,127 +804,12 @@ hr{border:none;border-top:1px dashed #ddd;margin:12px auto;width:80%}
 <div class="tname">${d.name}</div>
 <div class="meta">${d.bu} &middot; Assembly ${d.asm}</div>
 <div class="proj">${d.project}</div>
-<img class="qrimg" src="${d.img}" alt="QR"/>
+<img class="qrimg" src="${d.qrImgSrc}" alt="QR Code"/>
 <hr/>
-<div class="note">Scan QR code to open tester specification</div>
-<div class="urltext">${d.url}</div>
-<script>window.onload=()=>setTimeout(()=>window.print(),400)<\/script>
+<div class="note">📱 Scan to open tester specification</div>
+<script>window.onload=()=>setTimeout(()=>window.print(),500)<\/script>
 </body></html>`);
   w.document.close();
-}
-
-// ============================================
-// Pure JavaScript QR Code Generator
-// No internet needed — works 100% offline
-// ============================================
-function generateQR(canvas, text, size){
-  // QR code data encoding
-  const data = encodeQRData(text);
-  const N = data.length;
-  const cellSize = Math.floor(size / N);
-  const offset = Math.floor((size - N * cellSize) / 2);
-
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d');
-
-  // White background
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, size, size);
-
-  ctx.fillStyle = '#000000';
-  for(let r = 0; r < N; r++){
-    for(let c = 0; c < N; c++){
-      if(data[r][c]){
-        ctx.fillRect(
-          offset + c * cellSize,
-          offset + r * cellSize,
-          cellSize, cellSize
-        );
-      }
-    }
-  }
-}
-
-function encodeQRData(text){
-  // Version 6 QR (41x41) - handles URLs up to ~100 chars
-  const N = 41;
-  // Initialize matrix
-  const m = Array.from({length:N}, ()=>Array(N).fill(0));
-
-  // Finder patterns (3 corners)
-  function finder(r, c){
-    for(let i=0;i<7;i++) for(let j=0;j<7;j++){
-      m[r+i][c+j] = (i===0||i===6||j===0||j===6||(i>=2&&i<=4&&j>=2&&j<=4)) ? 1 : 0;
-    }
-  }
-  finder(0,0); finder(0,N-7); finder(N-7,0);
-
-  // Separators
-  for(let i=0;i<8;i++){
-    if(i<N){m[7][i]=0;m[i][7]=0;m[7][N-1-i]=0;m[i][N-8]=0;m[N-8][i]=0;m[N-1-i][7]=0;}
-  }
-
-  // Alignment pattern (version 6)
-  function align(r,c){
-    for(let i=-2;i<=2;i++) for(let j=-2;j<=2;j++){
-      m[r+i][c+j]=(Math.abs(i)===2||Math.abs(j)===2||i===0&&j===0)?1:0;
-    }
-  }
-  align(32,32);
-
-  // Timing patterns
-  for(let i=8;i<N-8;i++){
-    m[6][i]=m[i][6]=i%2===0?1:0;
-  }
-
-  // Dark module
-  m[N-8][8]=1;
-
-  // Data encoding using text bytes
-  const bytes=[];
-  for(let i=0;i<text.length;i++) bytes.push(text.charCodeAt(i));
-
-  // Fill data into matrix using zigzag pattern
-  let byteIdx=0, bitIdx=7;
-  let dir=-1, row=N-1;
-  let col=N-1;
-
-  const isFunc=(r,c)=>{
-    if(r<0||r>=N||c<0||c>=N) return true;
-    if(r<9&&c<9) return true;           // top-left finder
-    if(r<9&&c>=N-8) return true;        // top-right finder
-    if(r>=N-8&&c<9) return true;        // bottom-left finder
-    if(r===6||c===6) return true;        // timing
-    if(r>=N-7&&c>=N-7) return false;
-    return false;
-  };
-
-  while(col>=0){
-    if(col===6) col--;
-    for(let r2=0;r2<N;r2++){
-      const rr = dir===-1 ? N-1-r2 : r2;
-      for(let cc=col;cc>=col-1&&cc>=0;cc--){
-        if(!isFunc(rr,cc)){
-          const bit = byteIdx<bytes.length ? ((bytes[byteIdx]>>bitIdx)&1) : 0;
-          m[rr][cc]=bit;
-          bitIdx--;
-          if(bitIdx<0){bitIdx=7;byteIdx++;}
-        }
-      }
-    }
-    col-=2;
-    dir=-dir;
-  }
-
-  // XOR mask pattern 0: (row+col)%2===0
-  for(let r=0;r<N;r++){
-    for(let c=0;c<N;c++){
-      if(!isFunc(r,c)&&(r+c)%2===0) m[r][c]^=1;
-    }
-  }
-
-  return m;
 }
 
 // ── Deep Link ──
