@@ -9,6 +9,7 @@
 <link rel="icon" type="image/png" href="https://i.ibb.co/84KHnbHz/Screenshot-2026-03-18-095011.png"/>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -26,9 +27,9 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--light);color:var(--
 /* Header */
 header{background:var(--navy);color:#fff;padding:0 28px;height:62px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,0.3);position:sticky;top:0;z-index:50}
 .logo-area{display:flex;align-items:center;gap:12px}
-.logo-box{width:42px;height:42px;border-radius:10px;overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center;padding:3px;flex-shrink:0}
+.logo-box{width:52px;height:52px;border-radius:10px;overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center;padding:2px;flex-shrink:0}
 .logo-box img{width:100%;height:100%;object-fit:contain}
-.brand-main{font-size:15px;font-weight:700;line-height:1.2}
+.brand-main{font-size:16px;font-weight:700;line-height:1.2}
 .brand-sub{font-size:10px;opacity:0.55;letter-spacing:1.2px;text-transform:uppercase}
 .sys-label{font-size:13px;font-weight:500;opacity:0.85}
 .hdr-right{display:flex;align-items:center;gap:12px}
@@ -37,6 +38,8 @@ header{background:var(--navy);color:#fff;padding:0 28px;height:62px;display:flex
 .role-tech{background:rgba(0,135,90,0.25);color:#6ee7b7;border:1px solid rgba(110,231,183,0.3)}
 .user-chip{display:flex;align-items:center;gap:8px;cursor:pointer;padding:5px 10px 5px 6px;border-radius:24px;border:1px solid rgba(255,255,255,0.12);transition:background 0.2s}
 .user-chip:hover{background:rgba(255,255,255,0.08)}
+.logout-btn{background:rgba(220,38,38,0.15);color:#fca5a5;border:1px solid rgba(220,38,38,0.3);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;display:flex;align-items:center;gap:5px;transition:all 0.2s;white-space:nowrap}
+.logout-btn:hover{background:rgba(220,38,38,0.3);color:#fff;border-color:rgba(220,38,38,0.5)}
 .avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
 .av-admin{background:var(--accent)}.av-tech{background:var(--green)}
 .user-name{font-size:13px;font-weight:600;line-height:1.2}
@@ -48,15 +51,15 @@ header{background:var(--navy);color:#fff;padding:0 28px;height:62px;display:flex
 
 /* Login logo — image version */
 .auth-logo{
-  width:90px;height:90px;
-  border-radius:18px;
+  width:120px;height:120px;
+  border-radius:20px;
   overflow:hidden;
   background:#fff;
   border:2px solid #e8ecf3;
   display:flex;align-items:center;justify-content:center;
-  margin:0 auto 14px;
-  padding:6px;
-  box-shadow:0 4px 16px rgba(0,0,0,0.1);
+  margin:0 auto 16px;
+  padding:4px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.12);
 }
 .auth-logo img{width:100%;height:100%;object-fit:contain}
 
@@ -221,13 +224,14 @@ tr.row-expired:hover td{background:#fff0f0}
   <div class="sys-label">Tester Monitoring System</div>
   <div class="hdr-right">
     <div class="role-pill" id="hdrRolePill" style="display:none"></div>
-    <div class="user-chip" id="userChip" style="display:none" onclick="confirmLogout()" title="Click to logout">
+    <div class="user-chip" id="userChip" style="display:none">
       <div>
         <div class="user-name" id="hdrName"></div>
         <div class="user-id"   id="hdrId"></div>
       </div>
       <div class="avatar" id="hdrAvatar"></div>
     </div>
+    <button class="logout-btn hidden" id="logoutBtn" onclick="confirmLogout()">⏻ Logout</button>
   </div>
 </header>
 
@@ -533,6 +537,7 @@ function bootApp() {
   document.getElementById('authOverlay').style.display='none';
   document.getElementById('mainApp').style.display='block';
   document.getElementById('userChip').style.display='flex';
+  document.getElementById('logoutBtn').classList.remove('hidden');
   const isAdmin = currentUser.role==='Admin';
   document.getElementById('hdrName').textContent   = currentUser.name;
   document.getElementById('hdrId').textContent     = currentUser.emp_id;
@@ -747,55 +752,60 @@ async function openDoc(id){
 }
 
 // ── QR ──
-function makeQR(text){
-  const N=25,cell=7;
-  let h=0;
-  for(let i=0;i<text.length;i++) h=(Math.imul(31,h)+text.charCodeAt(i))|0;
-  function dark(r,c){
-    if(r<7&&c<7) return(r===0||r===6||c===0||c===6||(r>=2&&r<=4&&c>=2&&c<=4));
-    if(r<7&&c>=N-7) return(r===0||r===6||c===N-7||c===N-1||(r>=2&&r<=4&&c>=N-5&&c<=N-3));
-    if(r>=N-7&&c<7) return(r===N-7||r===N-1||c===0||c===6||(r>=N-5&&r<=N-3&&c>=2&&c<=4));
-    return((h^(r*41+c*23)^(r*c))&1)===1;
-  }
-  let rects='';
-  for(let r=0;r<N;r++) for(let c=0;c<N;c++) if(dark(r,c)) rects+=`<rect x="${c*cell+4}" y="${r*cell+4}" width="${cell}" height="${cell}" fill="#000"/>`;
-  const sz=N*cell+8;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${sz} ${sz}" width="184" height="184"><rect width="${sz}" height="${sz}" fill="#fff"/>${rects}</svg>`;
-}
 function showQR(id){
   const t=allTesters.find(x=>x.id===id); if(!t)return;
   const url=`${window.location.href.split('#')[0]}#tester-${t.id}`;
   document.getElementById('qrName').textContent=t.name;
   document.getElementById('qrMeta').textContent=`${t.bu} · Assembly ${t.assembly} · ${t.project}`;
-  document.getElementById('qrFrame').innerHTML=makeQR(url);
   document.getElementById('qrUrl').textContent=url;
-  window._qrPrint={name:t.name,meta:`${t.bu} · Assembly ${t.assembly}`,project:t.project,url,svg:makeQR(url)};
+
+  // Use proper QRCode library — 100% scannable by any phone
+  const frame=document.getElementById('qrFrame');
+  frame.innerHTML='<canvas id="qrCanvas"></canvas>';
+  QRCode.toCanvas(document.getElementById('qrCanvas'), url, {
+    width:184, margin:2,
+    color:{dark:'#000000',light:'#ffffff'}
+  }, function(err){
+    if(err) console.error(err);
+  });
+
+  // Store canvas data URL for printing
+  setTimeout(()=>{
+    const canvas=document.getElementById('qrCanvas');
+    const imgData=canvas?canvas.toDataURL('image/png'):'';
+    window._qrPrint={name:t.name,meta:`${t.bu} · Assembly ${t.assembly}`,project:t.project,url,imgData};
+  },300);
+
   document.getElementById('qrModal').classList.add('open');
 }
+
 function printQR(){
   const d=window._qrPrint; if(!d)return;
-  const w=window.open('','_blank','width=440,height=600');
+  const w=window.open('','_blank','width=440,height=620');
   w.document.write(`<!DOCTYPE html><html><head><title>QR — ${d.name}</title>
-<style>body{font-family:'Segoe UI',sans-serif;text-align:center;padding:36px;background:#fff}
-.logo{width:60px;height:60px;object-fit:contain;margin-bottom:10px}
+<style>
+body{font-family:'Segoe UI',sans-serif;text-align:center;padding:36px;background:#fff}
+.logo{width:60px;height:60px;object-fit:contain;margin-bottom:8px}
 .co{font-size:11px;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
 .title{font-size:22px;font-weight:700;color:#0b1f3a;margin-bottom:4px}
 .meta{font-size:12px;color:#666;margin-bottom:4px}
-.proj{font-size:14px;font-weight:600;color:#0057b8;margin-bottom:20px}
-hr{border:none;border-top:1px solid #e5e7eb;margin:16px 0}
-.url{font-size:9px;color:#bbb;word-break:break-all;font-family:monospace;margin-top:10px}
-.note{font-size:11px;color:#ccc;margin-top:6px}
-@media print{body{padding:16px}}</style></head><body>
+.proj{font-size:14px;font-weight:600;color:#0057b8;margin-bottom:16px}
+.qr-img{width:200px;height:200px}
+hr{border:none;border-top:1px solid #e5e7eb;margin:14px 0}
+.url{font-size:9px;color:#bbb;word-break:break-all;font-family:monospace;margin-top:8px}
+.note{font-size:11px;color:#aaa;margin-top:6px}
+@media print{body{padding:16px}}
+</style></head><body>
 <img class="logo" src="${LOGO_URL}" alt="logo"/>
 <div class="co">Amphenol FCI · Automation</div>
 <div class="title">${d.name}</div>
 <div class="meta">${d.meta}</div>
 <div class="proj">${d.project}</div>
-${d.svg}
+<img class="qr-img" src="${d.imgData}" alt="QR Code"/>
 <hr>
 <div class="url">${d.url}</div>
-<div class="note">Scan QR to open tester specification</div>
-<script>window.onload=()=>{setTimeout(()=>{window.print()},300)}<\/script>
+<div class="note">Scan QR code to open tester specification</div>
+<script>window.onload=()=>{setTimeout(()=>{window.print()},400)}<\/script>
 </body></html>`);
   w.document.close();
 }
