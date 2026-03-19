@@ -488,8 +488,8 @@ const LOGO_URL = 'https://i.ibb.co/84KHnbHz/Screenshot-2026-03-18-095011.png';
         <input type="month" id="rMonth"/>
       </div>
       <div class="form-group">
-        <label>Tester (optional)</label>
-        <select id="rTester"><option value="">All Testers</option></select>
+        <label>Project Name (optional)</label>
+        <select id="rProject"><option value="">All Projects</option></select>
       </div>
       <div class="form-group">
         <label>BU (optional)</label>
@@ -754,7 +754,10 @@ async function loadTesters(){
 function populateTesterDropdowns(){
   const opts=allTesters.map(t=>`<option value="${t.id}">${t.name} (${t.bu})</option>`).join('');
   document.getElementById('iFilterTester').innerHTML='<option value="">All Testers</option>'+opts;
-  document.getElementById('rTester').innerHTML='<option value="">All Testers</option>'+opts;
+  // Project dropdown — unique project names
+  const projects=[...new Set(allTesters.map(t=>t.project))];
+  const projOpts=projects.map(p=>`<option value="${p}">${p}</option>`).join('');
+  document.getElementById('rProject').innerHTML='<option value="">All Projects</option>'+projOpts;
 }
 
 // ══ DASHBOARD ══
@@ -1082,6 +1085,7 @@ async function saveIssue(){
     tester_name:t?t.name:'',
     tester_bu:t?t.bu:'',
     tester_assembly:t?t.assembly:'',
+    tester_project:t?t.project:'',
     description:desc,
     action_taken:action||null,
     status,
@@ -1229,11 +1233,11 @@ async function generateReport(){
 async function exportReport(){
   const month=document.getElementById('rMonth').value;
   if(!month){showToast('Please select a month first, then Generate.','warn');return;}
-  const tester=document.getElementById('rTester').value;
+  const project=document.getElementById('rProject').value;
   const bu=document.getElementById('rBU').value;
   let query=sb.from('issues').select('*').order('created_at',{ascending:false})
     .gte('created_at',month+'-01').lt('created_at',nextMonth(month)+'-01');
-  if(tester)query=query.eq('tester_id',parseInt(tester));
+  if(project)query=query.eq('tester_project',project);
   if(bu)query=query.eq('tester_bu',bu);
   const{data,error}=await query;
   if(error){showToast('Error: '+error.message,'err');return;}
