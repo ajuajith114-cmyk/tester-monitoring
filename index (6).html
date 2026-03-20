@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Tester Monitoring — Amphenol FCI</title>
+<link rel="icon" type="image/png" href="https://i.ibb.co/84KHnbHz/Screenshot-2026-03-18-095011.png"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0b1f3a;--navy2:#162f52;--accent:#0078d4;
+  --green:#00875a;--green2:#006644;--amber:#d97706;
+  --amber-bg:#fef3c7;--amber-text:#92400e;
+  --red:#dc2626;--red-bg:#fee2e2;--red-text:#991b1b;
+  --light:#f0f4f9;--white:#fff;--border:#d5dce8;--border2:#e8ecf3;
+  --text:#0d1b2e;--muted:#5a6a82;--muted2:#8896aa;
+  --shadow:0 2px 16px rgba(0,0,0,0.09);
+}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--light);color:var(--text);min-height:100vh;font-size:14px}
+
+/* Header */
+header{background:var(--navy);color:#fff;padding:0 24px;height:62px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,0.3);position:sticky;top:0;z-index:50}
+.logo-area{display:flex;align-items:center;gap:12px}
+.logo-box{width:52px;height:52px;border-radius:10px;overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center;padding:2px;flex-shrink:0}
+.logo-box img{width:100%;height:100%;object-fit:contain}
+.brand-main{font-size:16px;font-weight:700;line-height:1.2}
+.brand-sub{font-size:10px;opacity:0.5;letter-spacing:1.2px;text-transform:uppercase}
+.sys-label{font-size:13px;font-weight:500;opacity:0.85}
+.hdr-right{display:flex;align-items:center;gap:10px}
+.role-pill{padding:3px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase}
+.role-admin{background:rgba(0,120,212,0.25);color:#7ec8ff;border:1px solid rgba(126,200,255,0.3)}
+.role-tech{background:rgba(0,135,90,0.25);color:#6ee7b7;border:1px solid rgba(110,231,183,0.3)}
+.user-chip{display:flex;align-items:center;gap:8px;padding:5px 10px 5px 6px;border-radius:24px;border:1px solid rgba(255,255,255,0.12)}
+.avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+.av-admin{background:var(--accent)}.av-tech{background:var(--green)}
+.user-name{font-size:13px;font-weight:600;line-height:1.2}
+.user-id{font-size:10px;opacity:0.55;font-family:'IBM Plex Mono',monospace}
+.logout-btn{background:rgba(220,38,38,0.15);color:#fca5a5;border:1px solid rgba(220,38,38,0.3);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;display:flex;align-items:center;gap:5px;transition:all 0.2s}
+.logout-btn:hover{background:rgba(220,38,38,0.3);color:#fff}
+
+/* Auth */
+.auth-overlay{position:fixed;inset:0;background:var(--navy);z-index:200;display:flex;align-items:center;justify-content:center}
+.auth-card{background:#fff;border-radius:20px;padding:44px 40px;width:400px;box-shadow:0 32px 80px rgba(0,0,0,0.5)}
+.auth-logo{width:120px;height:120px;border-radius:20px;overflow:hidden;background:#fff;border:2px solid #e8ecf3;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;padding:4px;box-shadow:0 4px 20px rgba(0,0,0,0.12)}
+.auth-logo img{width:100%;height:100%;object-fit:contain}
+.auth-brand{text-align:center;font-size:21px;font-weight:700;color:var(--navy)}
+.auth-dept{text-align:center;font-size:12px;font-weight:600;color:var(--accent);letter-spacing:0.5px;margin-top:3px}
+.auth-sub{text-align:center;font-size:11px;color:var(--muted);margin-bottom:28px;letter-spacing:0.6px;text-transform:uppercase;margin-top:8px;padding-top:8px;border-top:1px solid var(--border2)}
+.auth-tabs{display:flex;border:1.5px solid var(--border);border-radius:10px;margin-bottom:24px;overflow:hidden}
+.auth-tab{flex:1;padding:9px;font-size:13px;font-weight:600;text-align:center;cursor:pointer;background:#fff;color:var(--muted);border:none;font-family:'IBM Plex Sans',sans-serif;transition:all 0.2s}
+.auth-tab.active{background:var(--navy);color:#fff}
+.form-group{margin-bottom:15px}
+.form-group label{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px}
+.form-group input,.form-group select,.form-group textarea{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px 13px;font-size:14px;font-family:'IBM Plex Sans',sans-serif;color:var(--text);outline:none;background:#fff;transition:border-color 0.2s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent)}
+.form-group textarea{resize:vertical;min-height:80px}
+.auth-btn{width:100%;background:var(--navy);color:#fff;border:none;border-radius:9px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;transition:background 0.2s;margin-top:4px}
+.auth-btn:hover{background:var(--navy2)}
+.auth-btn:disabled{opacity:0.6;cursor:not-allowed}
+.msg-err{color:var(--red);font-size:12px;margin-bottom:10px;padding:8px 12px;background:var(--red-bg);border-radius:6px;display:none}
+.msg-ok{color:var(--green2);font-size:12px;margin-bottom:10px;padding:8px 12px;background:#d1fae5;border-radius:6px;display:none}
+.auth-note{font-size:11px;color:var(--muted);text-align:center;margin-top:14px;line-height:1.7}
+.auth-note strong{color:var(--text)}
+
+/* Main */
+.main{padding:24px 24px 60px;max-width:1440px;margin:0 auto}
+
+/* Alert Banners */
+.alert-banner{background:#fff;border-radius:12px;border-left:4px solid var(--red);padding:12px 16px;margin-bottom:16px;box-shadow:var(--shadow);display:none}
+.alert-banner.show{display:block}
+.alert-banner.warn{border-left-color:var(--amber)}
+.alert-title{font-size:13px;font-weight:700;color:var(--red);margin-bottom:6px}
+.alert-banner.warn .alert-title{color:var(--amber)}
+.alert-chip{display:inline-block;background:var(--red-bg);color:var(--red-text);padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;margin:2px 4px}
+.alert-banner.warn .alert-chip{background:var(--amber-bg);color:var(--amber-text)}
+
+/* Dashboard */
+.dashboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px}
+.dash-card{background:var(--white);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow);border:1px solid var(--border);border-top:3px solid var(--accent);cursor:pointer;transition:transform 0.15s}
+.dash-card:hover{transform:translateY(-2px)}
+.dash-card.green{border-top-color:var(--green)}
+.dash-card.amber{border-top-color:var(--amber)}
+.dash-card.red{border-top-color:var(--red)}
+.dash-card.navy{border-top-color:var(--navy)}
+.dash-card.purple{border-top-color:#7c3aed}
+.dash-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.dash-value{font-size:30px;font-weight:700;color:var(--navy);line-height:1}
+.dash-sub{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* Page header */
+.page-hdr{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.page-title{font-size:20px;font-weight:700;color:var(--navy)}
+.count-pill{background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+.spacer{flex:1}
+
+/* Toolbar */
+.toolbar{display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.toolbar select,.toolbar input{border:1.5px solid var(--border);border-radius:8px;padding:8px 11px;font-size:13px;background:#fff;color:var(--text);outline:none;cursor:pointer;font-family:'IBM Plex Sans',sans-serif}
+.toolbar select:focus,.toolbar input:focus{border-color:var(--accent)}
+.search-wrap{position:relative;flex:1;min-width:160px}
+.search-wrap input{width:100%;padding-left:34px}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none}
+.chk-label{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.chk-label input{width:15px;height:15px;cursor:pointer;accent-color:var(--accent)}
+
+/* Buttons */
+.btn{border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:6px;transition:opacity 0.15s,transform 0.1s;white-space:nowrap;text-decoration:none}
+.btn:active{transform:scale(0.97)}
+.btn-navy{background:var(--navy);color:#fff}.btn-navy:hover{background:var(--navy2)}
+.btn-accent{background:var(--accent);color:#fff}.btn-accent:hover{opacity:0.88}
+.btn-green{background:var(--green);color:#fff}.btn-green:hover{background:var(--green2)}
+.btn-outline{background:#fff;color:var(--muted);border:1.5px solid var(--border)}.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:#fff;color:var(--red);border:1.5px solid #fecaca}.btn-danger:hover{background:#fff5f5}
+.btn-amber{background:var(--amber);color:#fff}.btn-amber:hover{opacity:0.88}
+.btn-qr{background:#fff;color:var(--navy);border:1.5px solid var(--border);font-size:12px;padding:5px 10px}.btn-qr:hover{border-color:var(--navy)}
+.btn-excel{background:#217346;color:#fff}.btn-excel:hover{background:#1a5c38}
+.btn-purple{background:#7c3aed;color:#fff}.btn-purple:hover{opacity:0.88}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn.hidden{display:none!important}
+
+/* Table */
+.table-wrap{background:var(--white);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse}
+thead{background:var(--navy)}
+th{padding:11px 13px;text-align:left;font-size:11px;font-weight:700;color:rgba(255,255,255,0.85);letter-spacing:0.5px;text-transform:uppercase;white-space:nowrap}
+td{padding:10px 13px;font-size:13px;border-bottom:1px solid var(--border2);color:var(--text);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f6f9ff}
+tr.row-expired td{background:#fff8f8}
+tr.row-maintenance td{background:#fffbeb}
+tr.row-oos td{background:#fff0f0}
+.td-actions{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+
+/* Badges */
+.bu-tag{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700}
+.bu-POWER{background:#fef3c7;color:#92400e}
+.bu-CMIO{background:#dbeafe;color:#1e40af}
+.bu-ACPA{background:#d1fae5;color:#065f46}
+.bu-BASICS{background:#ede9fe;color:#5b21b6}
+.plant-tag{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700}
+.plant-1{background:#f0fdf4;color:#166534}
+.plant-2{background:#eff6ff;color:#1e40af}
+.plant-3{background:#fdf4ff;color:#7e22ce}
+.type-badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-perm{background:#e0f2fe;color:#0369a1}
+.badge-temp{background:var(--amber-bg);color:var(--amber-text)}
+.badge-expired{background:var(--red-bg);color:var(--red-text)}
+.status-badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700}
+.s-active{background:#d1fae5;color:#065f46}
+.s-maintenance{background:#fef3c7;color:#92400e}
+.s-oos{background:#fee2e2;color:#991b1b}
+.issue-badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700}
+.i-open{background:#fee2e2;color:#991b1b}
+.i-inprogress{background:#fef3c7;color:#92400e}
+.i-fixed{background:#d1fae5;color:#065f46}
+.calib-due{color:var(--red);font-weight:700;font-size:11px}
+.calib-ok{color:var(--green);font-size:11px}
+.calib-soon{color:var(--amber);font-weight:700;font-size:11px}
+.audit-cell{font-size:11px;color:var(--muted2);line-height:1.5}
+.audit-who{color:var(--muted);font-weight:600}
+
+/* Loading / Empty */
+.loading-state{text-align:center;padding:50px;color:var(--muted)}
+.spinner{width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty-state{text-align:center;padding:50px 20px;color:var(--muted)}
+.empty-icon{font-size:44px;margin-bottom:10px;opacity:0.3}
+
+/* Modals */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(11,31,58,0.65);z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.modal-bg.open{display:flex}
+.modal{background:var(--white);border-radius:16px;padding:28px;width:540px;max-width:96vw;box-shadow:0 24px 64px rgba(0,0,0,0.35);max-height:92vh;overflow-y:auto}
+.modal-title{font-size:17px;font-weight:700;color:var(--navy);margin-bottom:20px}
+.modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-hint{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* Upload */
+.upload-area{border:2px dashed var(--border);border-radius:10px;padding:18px;text-align:center;cursor:pointer;transition:border-color 0.2s,background 0.2s}
+.upload-area:hover{border-color:var(--accent);background:#f4f9ff}
+.upload-area.has-file{border-color:var(--green);background:#f0faf5}
+.upload-label{font-size:13px;color:var(--muted);line-height:1.6}
+.upload-label strong{color:var(--accent)}
+
+/* QR */
+.qr-modal .modal{width:340px;text-align:center}
+.qr-tester{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.qr-meta{font-size:12px;color:var(--muted);margin-bottom:12px}
+.qr-frame{width:210px;height:210px;margin:0 auto 10px;background:#fff;border:2px solid var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;padding:8px}
+.qr-frame img{width:190px;height:190px;display:block}
+.qr-note{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.6}
+
+/* Doc Modal */
+.doc-modal .modal{width:660px}
+.pdf-frame{width:100%;height:400px;border:1.5px solid var(--border);border-radius:10px;overflow:hidden}
+.pdf-frame iframe{width:100%;height:100%;border:none}
+.no-doc-box{width:100%;height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--light);border-radius:10px;border:1.5px dashed var(--border);color:var(--muted);gap:8px}
+
+/* Issue Log */
+.issue-modal .modal{width:620px}
+.issue-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;max-height:340px;overflow-y:auto}
+.issue-card{background:var(--light);border-radius:10px;padding:14px 16px;border-left:4px solid var(--border)}
+.issue-card.open{border-left-color:var(--red)}
+.issue-card.inprogress{border-left-color:var(--amber)}
+.issue-card.fixed{border-left-color:var(--green)}
+.issue-card-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.issue-card-title{font-weight:600;font-size:13px;color:var(--navy);flex:1}
+.issue-card-body{font-size:13px;color:var(--text);margin-bottom:6px;line-height:1.6}
+.issue-card-action{font-size:12px;color:var(--green2);background:#d1fae5;padding:6px 10px;border-radius:6px;margin-top:6px}
+.issue-card-meta{font-size:11px;color:var(--muted2);margin-top:6px}
+.issue-divider{border:none;border-top:1px solid var(--border2);margin:4px 0}
+.add-issue-form{background:var(--light);border-radius:10px;padding:16px;border:1.5px solid var(--border2)}
+.add-issue-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px}
+
+/* Admin Tabs */
+.admin-tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--white);border-radius:10px;padding:5px;border:1px solid var(--border);width:fit-content;flex-wrap:wrap}
+.admin-tab{padding:7px 16px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);border:none;background:transparent;font-family:'IBM Plex Sans',sans-serif;transition:all 0.2s}
+.admin-tab.active{background:var(--navy);color:#fff}
+
+/* Users */
+.users-wrap{background:var(--white);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--border)}
+.pending-row td{background:#fffbeb}
+
+/* Report section */
+.report-toolbar{display:flex;gap:10px;align-items:flex-end;margin-bottom:20px;flex-wrap:wrap;background:var(--white);padding:16px;border-radius:12px;border:1px solid var(--border)}
+.report-toolbar .form-group{margin-bottom:0}
+.report-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.rsum-card{background:var(--white);border-radius:10px;padding:14px 16px;border:1px solid var(--border);text-align:center}
+.rsum-val{font-size:24px;font-weight:700;color:var(--navy)}
+.rsum-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-top:4px}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--navy);color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;z-index:500;transform:translateY(80px);opacity:0;transition:all 0.3s cubic-bezier(.34,1.56,.64,1);box-shadow:0 6px 24px rgba(0,0,0,0.25);max-width:320px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{background:var(--green)}.toast.err{background:var(--red)}.toast.warn{background:var(--amber)}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════
+     ⚙️  EDIT THIS SECTION ONLY
+     ════════════════════════════ -->
+<script>
+const SUPABASE_URL  = 'https://wuslxgwmfjbvpgezoqha.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_qiuYzjMkZkLyxLSkBOWeCw_PgvRvsM0';
+const ADMIN_IDS = [
+  'E01530',  // AJITH P
+  'E05678',  // Manager
+  'E09012',  // HOD
+];
+const LOGO_URL = 'https://i.ibb.co/84KHnbHz/Screenshot-2026-03-18-095011.png';
+</script>
+<!-- ════════════════════════════ -->
+
+<header>
+  <div class="logo-area">
+    <div class="logo-box"><img id="hdrLogo" src="" alt="FCI"/></div>
+    <div><div class="brand-main">Amphenol FCI</div><div class="brand-sub">Automation</div></div>
+  </div>
+  <div class="sys-label">Tester Monitoring System</div>
+  <div class="hdr-right">
+    <div class="role-pill" id="hdrRolePill" style="display:none"></div>
+    <div class="user-chip" id="userChip" style="display:none">
+      <div><div class="user-name" id="hdrName"></div><div class="user-id" id="hdrId"></div></div>
+      <div class="avatar" id="hdrAvatar"></div>
+    </div>
+    <button class="logout-btn hidden" id="logoutBtn" onclick="confirmLogout()">⏻ Logout</button>
+  </div>
+</header>
+
+<!-- AUTH -->
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-card">
+    <div class="auth-logo"><img id="loginLogo" src="" alt="FCI"/></div>
+    <div class="auth-brand">Amphenol FCI</div>
+    <div class="auth-dept">Automation</div>
+    <div class="auth-sub">Tester Monitoring System</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
+      <button class="auth-tab" onclick="switchTab('register')">Register</button>
+    </div>
+    <div id="loginForm">
+      <div class="form-group"><label>Employee ID</label>
+        <input type="text" id="lEmpId" placeholder="e.g. E01234" style="font-family:'IBM Plex Mono',monospace;letter-spacing:1px"/></div>
+      <div class="form-group"><label>Password</label>
+        <input type="password" id="lPass" placeholder="Your password"/></div>
+      <div class="msg-err" id="loginErr"></div>
+      <button class="auth-btn" id="loginBtn" onclick="doLogin()">Sign In</button>
+      <div class="auth-note">New here? Click <strong>Register</strong>.</div>
+    </div>
+    <div id="registerForm" style="display:none">
+      <div class="form-row-2">
+        <div class="form-group"><label>Employee ID</label>
+          <input type="text" id="rEmpId" placeholder="E01234" style="font-family:'IBM Plex Mono',monospace;letter-spacing:1px"/></div>
+        <div class="form-group"><label>Full Name</label>
+          <input type="text" id="rName" placeholder="Your name"/></div>
+      </div>
+      <div class="form-group"><label>Password</label><input type="password" id="rPass" placeholder="Min 6 characters"/></div>
+      <div class="form-group"><label>Confirm Password</label><input type="password" id="rPass2" placeholder="Repeat password"/></div>
+      <div class="msg-err" id="regErr"></div>
+      <div class="msg-ok" id="regOk"></div>
+      <button class="auth-btn" id="regBtn" onclick="doRegister()">Create Account</button>
+      <div class="auth-note">Admin must <strong>approve</strong> your account before login.</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="main" id="mainApp" style="display:none">
+
+  <!-- Alert Banners -->
+  <div class="alert-banner" id="expiryBanner">
+    <div class="alert-title">⚠️ Temporary Testers Expiring Within 7 Days</div>
+    <div id="expiryList" style="font-size:12px;line-height:2"></div>
+  </div>
+  <div class="alert-banner warn" id="calibBanner">
+    <div class="alert-title" style="color:var(--amber)">🔧 Calibration Due Within 30 Days</div>
+    <div id="calibList" style="font-size:12px;line-height:2"></div>
+  </div>
+
+  <!-- Admin Tabs -->
+  <div id="adminTabsBar" style="display:none">
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="showSection('testers')">🔧 Testers</button>
+      <button class="admin-tab" onclick="showSection('issues')">📋 Issue Log</button>
+      <button class="admin-tab" onclick="showSection('report')">📊 Reports</button>
+      <button class="admin-tab" onclick="showSection('users')">👥 Users</button>
+    </div>
+  </div>
+  <!-- Tech tabs (read only) -->
+  <div id="techTabsBar" style="display:none">
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="showSection('testers')">🔧 Testers</button>
+      <button class="admin-tab" onclick="showSection('issues')">📋 Issue Log</button>
+    </div>
+  </div>
+
+  <!-- ══ TESTERS SECTION ══ -->
+  <div id="sectionTesters">
+    <!-- Dashboard -->
+    <div class="dashboard">
+      <div class="dash-card navy" onclick="clearFilters()">
+        <div class="dash-label">Total Testers</div>
+        <div class="dash-value" id="dTotal">0</div>
+        <div class="dash-sub">Click to show all</div>
+      </div>
+      <div class="dash-card green" onclick="filterByStatus('active')">
+        <div class="dash-label">Active</div>
+        <div class="dash-value" id="dActive">0</div>
+        <div class="dash-sub">Click to filter</div>
+      </div>
+      <div class="dash-card amber" onclick="filterByStatus('maintenance')">
+        <div class="dash-label">Maintenance</div>
+        <div class="dash-value" id="dMaint">0</div>
+        <div class="dash-sub">Click to filter</div>
+      </div>
+      <div class="dash-card red" onclick="filterByStatus('outofservice')">
+        <div class="dash-label">Out of Service</div>
+        <div class="dash-value" id="dOos">0</div>
+        <div class="dash-sub">Click to filter</div>
+      </div>
+      <div class="dash-card amber" onclick="filterByType('permanent')">
+        <div class="dash-label">Permanent</div>
+        <div class="dash-value" id="dPerm">0</div>
+        <div class="dash-sub">Click to filter</div>
+      </div>
+      <div class="dash-card purple" onclick="filterByType('temporary')">
+        <div class="dash-label">Temporary</div>
+        <div class="dash-value" id="dTemp">0</div>
+        <div class="dash-sub">Click to filter</div>
+      </div>
+      <div class="dash-card red">
+        <div class="dash-label">No Document</div>
+        <div class="dash-value" id="dNodoc">0</div>
+        <div class="dash-sub">PDF missing</div>
+      </div>
+    </div>
+
+    <div class="page-hdr">
+      <div class="page-title">Tester Database</div>
+      <span class="count-pill" id="countPill">0</span>
+      <div class="spacer"></div>
+      <button class="btn btn-excel hidden" id="exportBtn" onclick="exportExcel()">⬇ Export Excel</button>
+      <button class="btn btn-accent hidden" id="addBtn" onclick="openAdd()">+ Add Tester</button>
+    </div>
+
+    <div class="toolbar">
+      <select id="fPlant" onchange="filterTable()">
+        <option value="">All Plants</option>
+        <option value="Plant 1">Plant 1</option>
+        <option value="Plant 2">Plant 2</option>
+        <option value="Plant 3">Plant 3</option>
+      </select>
+      <select id="fBU" onchange="filterTable()">
+        <option value="">All BU</option>
+        <option>POWER BU</option><option>CMIO</option>
+        <option>ACPA</option><option>BASICS</option>
+      </select>
+      <select id="fAsm" onchange="filterTable()">
+        <option value="">All Assembly</option>
+        <option value="1">Assembly 1</option><option value="2">Assembly 2</option>
+        <option value="3">Assembly 3</option><option value="4">Assembly 4</option>
+      </select>
+      <select id="fStatus" onchange="filterTable()">
+        <option value="">All Status</option>
+        <option value="active">Active</option>
+        <option value="maintenance">Maintenance</option>
+        <option value="outofservice">Out of Service</option>
+      </select>
+      <select id="fType" onchange="filterTable()">
+        <option value="">All Types</option>
+        <option value="permanent">Permanent</option>
+        <option value="temporary">Temporary</option>
+      </select>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="fSearch" placeholder="Search tester or project..." oninput="filterTable()"/>
+      </div>
+      <label class="chk-label">
+        <input type="checkbox" id="fShowExpired" onchange="filterTable()"/> Show expired
+      </label>
+    </div>
+
+    <div id="loadingState" class="loading-state"><div class="spinner"></div>Loading testers...</div>
+    <div class="table-wrap" id="tableWrap" style="display:none">
+      <table>
+        <thead>
+          <tr>
+            <th>Plant</th><th>BU</th><th>Assembly</th><th>Project</th><th>Tester Name</th>
+            <th>Status</th><th>Type</th><th>Calibration</th>
+            <th>Document</th><th>QR Code</th><th>Issues</th><th>Added By</th>
+            <th id="actionHead" class="hidden">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tBody"></tbody>
+      </table>
+      <div class="empty-state hidden" id="emptyState">
+        <div class="empty-icon">🔧</div>
+        <p>No testers found. Adjust filters or add a new tester.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ISSUE LOG SECTION ══ -->
+  <div id="sectionIssues" style="display:none">
+    <div class="page-hdr">
+      <div class="page-title">Issue Log</div>
+      <span class="count-pill" id="issueCountPill">0</span>
+      <div class="spacer"></div>
+      <button class="btn btn-accent" onclick="openAddIssueGeneral()">+ Log New Issue</button>
+    </div>
+    <div class="toolbar">
+      <select id="iFilterProject" onchange="loadIssues()">
+        <option value="">All Projects</option>
+      </select>
+      <select id="iFilterStatus" onchange="loadIssues()">
+        <option value="">All Status</option>
+        <option value="open">Open</option>
+        <option value="inprogress">In Progress</option>
+        <option value="fixed">Fixed</option>
+      </select>
+      <select id="iFilterMonth" onchange="loadIssues()">
+        <option value="">All Months</option>
+      </select>
+    </div>
+    <div id="issuesLoading" class="loading-state"><div class="spinner"></div>Loading issues...</div>
+    <div class="table-wrap" id="issuesTableWrap" style="display:none">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th><th>Project</th><th>BU / Assembly</th>
+            <th>Issue Description</th><th>Action Taken</th>
+            <th>Status</th><th>Logged By</th>
+            <th id="issueActionHead" class="hidden">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="issuesBody"></tbody>
+      </table>
+      <div class="empty-state hidden" id="issuesEmpty">
+        <div class="empty-icon">📋</div>
+        <p>No issues logged yet.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ REPORTS SECTION (Admin only) ══ -->
+  <div id="sectionReport" style="display:none">
+    <div class="page-hdr">
+      <div class="page-title">Monthly Report</div>
+      <div class="spacer"></div>
+      <button class="btn btn-excel" onclick="exportReport()">⬇ Export Report CSV</button>
+    </div>
+    <div class="report-toolbar">
+      <div class="form-group">
+        <label>Select Month</label>
+        <input type="month" id="rMonth"/>
+      </div>
+      <div class="form-group">
+        <label>Project Name (optional)</label>
+        <select id="rProject"><option value="">All Projects</option></select>
+      </div>
+      <div class="form-group">
+        <label>BU (optional)</label>
+        <select id="rBU">
+          <option value="">All BU</option>
+          <option>POWER BU</option><option>CMIO</option>
+          <option>ACPA</option><option>BASICS</option>
+        </select>
+      </div>
+      <button class="btn btn-navy" onclick="generateReport()" style="align-self:flex-end">Generate Report</button>
+    </div>
+    <div class="report-summary" id="reportSummary" style="display:none">
+      <div class="rsum-card"><div class="rsum-val" id="rTotalIssues">0</div><div class="rsum-lbl">Total Issues</div></div>
+      <div class="rsum-card"><div class="rsum-val" id="rOpenIssues">0</div><div class="rsum-lbl">Open</div></div>
+      <div class="rsum-card"><div class="rsum-val" id="rFixedIssues">0</div><div class="rsum-lbl">Fixed</div></div>
+      <div class="rsum-card"><div class="rsum-val" id="rInprogIssues">0</div><div class="rsum-lbl">In Progress</div></div>
+    </div>
+    <div class="table-wrap" id="reportTableWrap" style="display:none">
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Tester</th><th>BU / Assembly</th><th>Issue</th><th>Action Taken</th><th>Status</th><th>Logged By</th></tr>
+        </thead>
+        <tbody id="reportBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ USERS SECTION ══ -->
+  <div id="sectionUsers" style="display:none">
+    <div class="page-hdr">
+      <div class="page-title">Users &amp; Approvals</div>
+      <span class="count-pill" id="userCountPill">0</span>
+    </div>
+    <div id="usersLoading" class="loading-state"><div class="spinner"></div>Loading...</div>
+    <div class="users-wrap" id="usersWrap" style="display:none">
+      <table>
+        <thead><tr><th>Employee ID</th><th>Full Name</th><th>Role</th><th>Status</th><th>Registered</th><th>Actions</th></tr></thead>
+        <tbody id="usersBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- ══ ADD/EDIT TESTER MODAL ══ -->
+<div class="modal-bg" id="addModal">
+  <div class="modal">
+    <div class="modal-title" id="addModalTitle">Add New Tester</div>
+    <input type="hidden" id="eId"/>
+    <div class="form-group">
+      <label>Plant</label>
+      <select id="fmPlant">
+        <option value="Plant 1">Plant 1</option>
+        <option value="Plant 2">Plant 2</option>
+        <option value="Plant 3">Plant 3</option>
+      </select>
+    </div>
+    <div class="form-row-2">
+      <div class="form-group"><label>Business Unit</label>
+        <select id="fmBU"><option>POWER BU</option><option>CMIO</option><option>ACPA</option><option>BASICS</option></select></div>
+      <div class="form-group"><label>Assembly Line</label>
+        <select id="fmAsm"><option value="1">Assembly 1</option><option value="2">Assembly 2</option><option value="3">Assembly 3</option><option value="4">Assembly 4</option></select></div>
+    </div>
+    <div class="form-group"><label>Project Name</label><input type="text" id="fmProject" placeholder="e.g. DELL HIPOT Tester"/></div>
+    <div class="form-group"><label>Tester Name</label><input type="text" id="fmName" placeholder="e.g. TVS Tester"/></div>
+    <div class="form-row-2">
+      <div class="form-group"><label>Tester Status</label>
+        <select id="fmStatus"><option value="active">Active</option><option value="maintenance">Under Maintenance</option><option value="outofservice">Out of Service</option></select></div>
+      <div class="form-group"><label>Tester Type</label>
+        <select id="fmType" onchange="toggleExpiry()"><option value="permanent">Permanent</option><option value="temporary">Temporary</option></select></div>
+    </div>
+    <div class="form-row-2">
+      <div class="form-group" id="expiryGroup" style="display:none"><label>Expiry Date</label>
+        <input type="date" id="fmExpiry"/><div class="form-hint">Shows EXPIRED after this date</div></div>
+      <div class="form-group"><label>Last Calibration Date</label>
+        <input type="date" id="fmCalib"/></div>
+    </div>
+    <div class="form-group"><label>Calibration Interval</label>
+      <select id="fmCalibInterval"><option value="3">Every 3 months</option><option value="6" selected>Every 6 months</option><option value="12">Every 12 months</option><option value="24">Every 24 months</option></select></div>
+    <div class="form-group"><label>Tester Spec Document (PDF)</label>
+      <div class="upload-area" id="uploadArea" onclick="document.getElementById('pdfInput').click()">
+        <div class="upload-label" id="uploadLabel"><strong>Click to select PDF</strong><br>Tester specification document</div>
+        <input type="file" id="pdfInput" accept=".pdf" style="display:none" onchange="onFileSelect(event)"/>
+      </div></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('addModal')">Cancel</button>
+      <button class="btn btn-navy" id="saveBtn" onclick="saveTester()">Save Tester</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ISSUE LOG MODAL ══ -->
+<div class="modal-bg issue-modal" id="issueModal">
+  <div class="modal">
+    <div class="modal-title" id="issueModalTitle">Issue Log</div>
+    <input type="hidden" id="issueTesterId"/>
+
+    <!-- Existing issues list -->
+    <div class="issue-list" id="issueList"></div>
+
+    <!-- Add new issue form -->
+    <div class="add-issue-form">
+      <div class="add-issue-title">+ Log New Issue</div>
+      <div class="form-group"><label>Issue Description</label>
+        <textarea id="issueDesc" placeholder="Describe the issue clearly..."></textarea></div>
+      <div class="form-row-2">
+        <div class="form-group"><label>Action Taken</label>
+          <textarea id="issueAction" placeholder="What was done to fix it?" style="min-height:60px"></textarea></div>
+        <div class="form-group"><label>Status</label>
+          <select id="issueStatus">
+            <option value="open">Open</option>
+            <option value="inprogress">In Progress</option>
+            <option value="fixed">Fixed</option>
+          </select></div>
+      </div>
+      <button class="btn btn-accent btn-sm" onclick="saveIssue()">Save Issue</button>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('issueModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ QR MODAL ══ -->
+<div class="modal-bg qr-modal" id="qrModal">
+  <div class="modal">
+    <div class="modal-title">QR Code — Scan to Open Spec</div>
+    <div class="qr-tester" id="qrName"></div>
+    <div class="qr-meta" id="qrMeta"></div>
+    <div class="qr-frame" id="qrFrame">
+      <img id="qrImg" src="" alt="QR Code" width="190" height="190" style="display:block;border-radius:4px"/>
+    </div>
+    <div class="qr-note">📱 Scan with phone → PDF opens directly<br>No login needed!</div>
+    <div class="modal-actions" style="justify-content:center">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('qrModal')">Close</button>
+      <button class="btn btn-navy btn-sm" onclick="printQR()">🖨 Print QR</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DOC MODAL ══ -->
+<div class="modal-bg doc-modal" id="docModal">
+  <div class="modal">
+    <div class="modal-title" id="docTitle">Tester Specification</div>
+    <div id="docContent"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('docModal')">Close</button>
+      <a id="docDownload" class="btn btn-green btn-sm" style="display:none;text-decoration:none" target="_blank">⬇ Download PDF</a>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+document.getElementById('hdrLogo').src   = LOGO_URL;
+document.getElementById('loginLogo').src = LOGO_URL;
+
+let sb;
+try{ sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON); }catch(e){ console.error(e); }
+
+let currentUser=null, allTesters=[], allIssues=[], pendingFile=null;
+
+// ══ AUTH ══
+function switchTab(tab){
+  document.getElementById('loginForm').style.display    = tab==='login'?'block':'none';
+  document.getElementById('registerForm').style.display = tab==='register'?'block':'none';
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&tab==='login')||(i===1&&tab==='register')));
+}
+async function doLogin(){
+  const empId=document.getElementById('lEmpId').value.trim().toUpperCase();
+  const pass=document.getElementById('lPass').value;
+  hideMsg('loginErr');
+  if(!empId||!pass){showMsg('loginErr','Please enter your Employee ID and password.');return;}
+  setBtn('loginBtn',true,'Signing in...');
+  const{data:user,error}=await sb.from('users').select('*').eq('emp_id',empId).single();
+  if(error||!user){showMsg('loginErr','Employee ID not found. Please register first.');setBtn('loginBtn',false,'Sign In');return;}
+  if(!user.approved){showMsg('loginErr','Your account is pending admin approval.');setBtn('loginBtn',false,'Sign In');return;}
+  if(user.password_hash!==btoa(pass)){showMsg('loginErr','Incorrect password.');setBtn('loginBtn',false,'Sign In');return;}
+  await sb.from('users').update({last_login:new Date().toISOString()}).eq('id',user.id);
+  const isAdmin=ADMIN_IDS.includes(empId);
+  currentUser={emp_id:empId,name:user.full_name,role:isAdmin?'Admin':'Technician'};
+  setBtn('loginBtn',false,'Sign In');
+  bootApp();
+}
+async function doRegister(){
+  const empId=document.getElementById('rEmpId').value.trim().toUpperCase();
+  const name=document.getElementById('rName').value.trim();
+  const pass=document.getElementById('rPass').value;
+  const pass2=document.getElementById('rPass2').value;
+  hideMsg('regErr');hideMsg('regOk');
+  if(!empId||!name||!pass){showMsg('regErr','Please fill all fields.');return;}
+  if(!/^E\d{5}$/.test(empId)){showMsg('regErr','Employee ID must be format E01234.');return;}
+  if(pass.length<6){showMsg('regErr','Password must be at least 6 characters.');return;}
+  if(pass!==pass2){showMsg('regErr','Passwords do not match.');return;}
+  setBtn('regBtn',true,'Registering...');
+  const{data:existing}=await sb.from('users').select('id').eq('emp_id',empId).maybeSingle();
+  if(existing){showMsg('regErr','This Employee ID is already registered.');setBtn('regBtn',false,'Create Account');return;}
+  const isAdmin=ADMIN_IDS.includes(empId);
+  const{error}=await sb.from('users').insert({emp_id:empId,full_name:name,password_hash:btoa(pass),approved:isAdmin,role:isAdmin?'admin':'technician',created_at:new Date().toISOString()});
+  setBtn('regBtn',false,'Create Account');
+  if(error){showMsg('regErr','Registration failed: '+error.message);return;}
+  showMsg('regOk',isAdmin?'Admin account created! You can sign in.':'Account created! Admin must approve before login.');
+}
+function showMsg(id,msg){const el=document.getElementById(id);el.textContent=msg;el.style.display='block';}
+function hideMsg(id){document.getElementById(id).style.display='none';}
+function setBtn(id,dis,txt){const b=document.getElementById(id);b.disabled=dis;b.textContent=txt;}
+
+// ══ BOOT ══
+function bootApp(){
+  document.getElementById('authOverlay').style.display='none';
+  document.getElementById('mainApp').style.display='block';
+  document.getElementById('userChip').style.display='flex';
+  document.getElementById('logoutBtn').classList.remove('hidden');
+  const isAdmin=currentUser.role==='Admin';
+  document.getElementById('hdrName').textContent=currentUser.name;
+  document.getElementById('hdrId').textContent=currentUser.emp_id;
+  document.getElementById('hdrAvatar').textContent=currentUser.name[0].toUpperCase();
+  document.getElementById('hdrAvatar').className='avatar '+(isAdmin?'av-admin':'av-tech');
+  const pill=document.getElementById('hdrRolePill');
+  pill.textContent=currentUser.role;pill.className='role-pill '+(isAdmin?'role-admin':'role-tech');pill.style.display='inline-block';
+  if(isAdmin){
+    document.getElementById('addBtn').classList.remove('hidden');
+    document.getElementById('exportBtn').classList.remove('hidden');
+    document.getElementById('actionHead').classList.remove('hidden');
+    document.getElementById('issueActionHead').classList.remove('hidden');
+    document.getElementById('adminTabsBar').style.display='block';
+  } else {
+    document.getElementById('techTabsBar').style.display='block';
+  }
+  // Set current month for report
+  const now=new Date();
+  document.getElementById('rMonth').value=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  loadTesters();
+}
+function confirmLogout(){if(confirm('Sign out?'))location.reload();}
+
+// ══ SECTIONS ══
+function showSection(sec){
+  ['testers','issues','report','users'].forEach(s=>{
+    const el=document.getElementById('section'+s.charAt(0).toUpperCase()+s.slice(1));
+    if(el)el.style.display=s===sec?'block':'none';
+  });
+  document.querySelectorAll('.admin-tab, .admin-tab').forEach(t=>{
+    const map=['testers','issues','report','users'];
+    const idx=map.indexOf(sec);
+    document.querySelectorAll('#adminTabsBar .admin-tab').forEach((bt,i)=>bt.classList.toggle('active',i===idx));
+    document.querySelectorAll('#techTabsBar .admin-tab').forEach((bt,i)=>bt.classList.toggle('active',i===idx));
+  });
+  if(sec==='issues')loadIssues();
+  if(sec==='users')loadUsers();
+}
+
+// ══ LOAD TESTERS ══
+async function loadTesters(){
+  document.getElementById('loadingState').style.display='block';
+  document.getElementById('tableWrap').style.display='none';
+  const{data,error}=await sb.from('testers').select('*').order('id',{ascending:true});
+  document.getElementById('loadingState').style.display='none';
+  document.getElementById('tableWrap').style.display='block';
+  if(error){showToast('Load error: '+error.message,'err');return;}
+  allTesters=data||[];
+  populateTesterDropdowns();
+  updateDashboard();
+  checkAlerts();
+  filterTable();
+}
+
+function populateTesterDropdowns(){
+  const opts=allTesters.map(t=>`<option value="${t.id}">${t.name} (${t.bu})</option>`).join('');
+  // Issue log filter — show project names
+  const projects=[...new Set(allTesters.map(t=>t.project))];
+  const projOpts=projects.map(p=>`<option value="${p}">${p}</option>`).join('');
+  document.getElementById('iFilterProject').innerHTML='<option value="">All Projects</option>'+projOpts;
+  // Project dropdown — unique project names
+  const projects=[...new Set(allTesters.map(t=>t.project))];
+  const projOpts=projects.map(p=>`<option value="${p}">${p}</option>`).join('');
+  document.getElementById('rProject').innerHTML='<option value="">All Projects</option>'+projOpts;
+}
+
+// ══ DASHBOARD ══
+function updateDashboard(){
+  document.getElementById('dTotal').textContent=allTesters.length;
+  document.getElementById('dActive').textContent=allTesters.filter(t=>(t.status||'active')==='active').length;
+  document.getElementById('dMaint').textContent=allTesters.filter(t=>t.status==='maintenance').length;
+  document.getElementById('dOos').textContent=allTesters.filter(t=>t.status==='outofservice').length;
+  document.getElementById('dPerm').textContent=allTesters.filter(t=>(t.tester_type||'permanent')==='permanent').length;
+  document.getElementById('dTemp').textContent=allTesters.filter(t=>t.tester_type==='temporary'&&!isExpired(t)).length;
+  document.getElementById('dNodoc').textContent=allTesters.filter(t=>!t.doc_path).length;
+}
+
+function clearFilters(){
+  document.getElementById('fBU').value='';
+  document.getElementById('fAsm').value='';
+  document.getElementById('fStatus').value='';
+  document.getElementById('fType').value='';
+  document.getElementById('fSearch').value='';
+  filterTable();
+}
+function filterByStatus(s){document.getElementById('fStatus').value=s;filterTable();}
+function filterByType(t){document.getElementById('fType').value=t;filterTable();}
+
+// ══ ALERTS ══
+function checkAlerts(){
+  const today=new Date(),in7=new Date(),in30=new Date();
+  in7.setDate(today.getDate()+7);in30.setDate(today.getDate()+30);
+  const expiring=allTesters.filter(t=>{
+    if(t.tester_type!=='temporary'||!t.expiry_date)return false;
+    const exp=new Date(t.expiry_date);return exp>=today&&exp<=in7;
+  });
+  if(expiring.length){
+    document.getElementById('expiryBanner').classList.add('show');
+    document.getElementById('expiryList').innerHTML=expiring.map(t=>`<span class="alert-chip">🔴 ${t.name} — ${t.bu} Asm${t.assembly} — expires ${fmtDate(t.expiry_date)}</span>`).join(' ');
+  }
+  const calibDue=allTesters.filter(t=>{
+    if(!t.last_calibration||!t.calib_interval)return false;
+    const next=new Date(t.last_calibration);next.setMonth(next.getMonth()+parseInt(t.calib_interval));
+    return next>=today&&next<=in30;
+  });
+  if(calibDue.length){
+    document.getElementById('calibBanner').classList.add('show');
+    document.getElementById('calibList').innerHTML=calibDue.map(t=>{
+      const next=new Date(t.last_calibration);next.setMonth(next.getMonth()+parseInt(t.calib_interval));
+      return`<span class="alert-chip">🔧 ${t.name} — due ${fmtDate(next.toISOString())}</span>`;
+    }).join(' ');
+  }
+}
+
+// ══ FILTER TABLE ══
+function isExpired(t){return t.tester_type==='temporary'&&t.expiry_date&&new Date(t.expiry_date)<new Date();}
+function filterTable(){
+  const plant=document.getElementById('fPlant').value;
+  const bu=document.getElementById('fBU').value;
+  const asm=document.getElementById('fAsm').value;
+  const status=document.getElementById('fStatus').value;
+  const type=document.getElementById('fType').value;
+  const q=document.getElementById('fSearch').value.toLowerCase();
+  const showExp=document.getElementById('fShowExpired').checked;
+  const filtered=allTesters.filter(t=>{
+    if(plant&&t.plant!==plant)return false;
+    if(bu&&t.bu!==bu)return false;
+    if(asm&&t.assembly!==asm)return false;
+    if(status&&(t.status||'active')!==status)return false;
+    if(type&&(t.tester_type||'permanent')!==type)return false;
+    if(q&&!(t.name.toLowerCase().includes(q)||t.project.toLowerCase().includes(q)||t.bu.toLowerCase().includes(q)))return false;
+    if(!showExp&&isExpired(t))return false;
+    return true;
+  });
+  document.getElementById('countPill').textContent=filtered.length;
+  renderRows(filtered);
+}
+
+function buClass(bu){return{'POWER BU':'bu-POWER','CMIO':'bu-CMIO','ACPA':'bu-ACPA','BASICS':'bu-BASICS'}[bu]||'bu-BASICS';}
+function typeBadge(t){
+  if(t.tester_type==='temporary'){
+    if(isExpired(t))return`<span class="type-badge badge-expired">🔴 EXPIRED</span>`;
+    return`<span class="type-badge badge-temp">🟡 TEMP</span>`;
+  }
+  return`<span class="type-badge badge-perm">🔵 PERMANENT</span>`;
+}
+function statusBadge(s){
+  const map={active:`<span class="status-badge s-active">✅ Active</span>`,maintenance:`<span class="status-badge s-maintenance">🔧 Maintenance</span>`,outofservice:`<span class="status-badge s-oos">🔴 Out of Service</span>`};
+  return map[s||'active']||map['active'];
+}
+function calibStatus(t){
+  if(!t.last_calibration||!t.calib_interval)return{cls:'',txt:'—'};
+  const next=new Date(t.last_calibration);next.setMonth(next.getMonth()+parseInt(t.calib_interval));
+  const today=new Date(),in30=new Date();in30.setDate(today.getDate()+30);
+  if(next<today)return{cls:'calib-due',txt:'⚠ OVERDUE'};
+  if(next<=in30)return{cls:'calib-soon',txt:'⚡ Due: '+fmtDate(next.toISOString())};
+  return{cls:'calib-ok',txt:'✓ '+fmtDate(next.toISOString())};
+}
+function fmtDate(iso){if(!iso)return'—';return new Date(iso).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
+function fmtDateTime(iso){if(!iso)return'—';return new Date(iso).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}
+
+function renderRows(rows){
+  const isAdmin=currentUser&&currentUser.role==='Admin';
+  const tbody=document.getElementById('tBody');
+  const empty=document.getElementById('emptyState');
+  if(!rows.length){tbody.innerHTML='';empty.classList.remove('hidden');return;}
+  empty.classList.add('hidden');
+  tbody.innerHTML=rows.map(t=>{
+    const cal=calibStatus(t);
+    let rowClass=isExpired(t)?'row-expired':t.status==='maintenance'?'row-maintenance':t.status==='outofservice'?'row-oos':'';
+    const plantClass={'Plant 1':'plant-1','Plant 2':'plant-2','Plant 3':'plant-3'}[t.plant]||'plant-1';
+    return`<tr class="${rowClass}">
+      <td><span class="plant-tag ${plantClass}">${t.plant||'—'}</span></td>
+      <td><span class="bu-tag ${buClass(t.bu)}">${t.bu}</span></td>
+      <td>Assembly ${t.assembly}</td>
+      <td>${t.project}</td>
+      <td><strong>${t.name}</strong></td>
+      <td>${statusBadge(t.status)}</td>
+      <td>${typeBadge(t)}</td>
+      <td><span class="${cal.cls}">${cal.txt}</span></td>
+      <td><button class="btn btn-green btn-sm" onclick="openDoc(${t.id})">${t.doc_path?'📄 Open Spec':'📁 No Doc'}</button></td>
+      <td><button class="btn btn-qr" onclick="showQR(${t.id})">⬛ QR</button></td>
+      <td><button class="btn btn-purple btn-sm" onclick="openIssueModal(${t.id})">🔍 Issues</button></td>
+      <td><div class="audit-cell"><div class="audit-who">${t.added_by_name||'—'}</div><div style="font-size:10px;font-family:'IBM Plex Mono',monospace">${t.added_by_id||''}</div></div></td>
+      ${isAdmin?`<td>
+        <div class="td-actions">
+          <button class="btn btn-outline btn-sm" onclick="openEdit(${t.id})">✏ Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteTester(${t.id})">🗑</button>
+        </div>
+      </td>`:''}
+    </tr>`;
+  }).join('');
+}
+
+// ══ ADD / EDIT TESTER ══
+function toggleExpiry(){document.getElementById('expiryGroup').style.display=document.getElementById('fmType').value==='temporary'?'block':'none';}
+function openAdd(){
+  if(!currentUser||currentUser.role!=='Admin'){showToast('Admin access only.','err');return;}
+  document.getElementById('addModalTitle').textContent='Add New Tester';
+  document.getElementById('eId').value='';
+  ['fmBU','fmAsm','fmProject','fmName','fmExpiry','fmCalib'].forEach(id=>{const el=document.getElementById(id);if(el.tagName==='SELECT'){}else el.value='';});
+  document.getElementById('fmPlant').value='Plant 1';
+  document.getElementById('fmBU').value='POWER BU';document.getElementById('fmAsm').value='1';
+  document.getElementById('fmStatus').value='active';document.getElementById('fmType').value='permanent';
+  document.getElementById('fmCalibInterval').value='6';document.getElementById('expiryGroup').style.display='none';
+  resetUpload();pendingFile=null;document.getElementById('addModal').classList.add('open');
+}
+function openEdit(id){
+  if(!currentUser||currentUser.role!=='Admin'){showToast('Admin access only.','err');return;}
+  const t=allTesters.find(x=>x.id===id);if(!t)return;
+  document.getElementById('addModalTitle').textContent='Edit Tester';
+  document.getElementById('eId').value=id;
+  document.getElementById('fmPlant').value=t.plant||'Plant 1';
+  document.getElementById('fmBU').value=t.bu;document.getElementById('fmAsm').value=t.assembly;
+  document.getElementById('fmProject').value=t.project;document.getElementById('fmName').value=t.name;
+  document.getElementById('fmStatus').value=t.status||'active';document.getElementById('fmType').value=t.tester_type||'permanent';
+  document.getElementById('fmExpiry').value=t.expiry_date||'';document.getElementById('fmCalib').value=t.last_calibration||'';
+  document.getElementById('fmCalibInterval').value=t.calib_interval||'6';
+  document.getElementById('expiryGroup').style.display=t.tester_type==='temporary'?'block':'none';
+  if(t.doc_path){document.getElementById('uploadLabel').innerHTML=`<strong>📄 ${t.doc_name||'spec.pdf'}</strong><br>Click to replace`;document.getElementById('uploadArea').classList.add('has-file');}
+  else resetUpload();
+  pendingFile=null;document.getElementById('addModal').classList.add('open');
+}
+function resetUpload(){
+  document.getElementById('uploadLabel').innerHTML='<strong>Click to select PDF</strong><br>Tester specification document';
+  document.getElementById('uploadArea').classList.remove('has-file');
+  document.getElementById('pdfInput').value='';
+}
+function onFileSelect(e){
+  const f=e.target.files[0];if(!f)return;
+  pendingFile=f;
+  document.getElementById('uploadLabel').innerHTML=`<strong>📄 ${f.name}</strong><br>${(f.size/1024).toFixed(0)} KB — ready`;
+  document.getElementById('uploadArea').classList.add('has-file');
+}
+async function saveTester(){
+  if(!currentUser||currentUser.role!=='Admin'){showToast('Admin access only.','err');return;}
+  const bu=document.getElementById('fmBU').value;
+  const assembly=document.getElementById('fmAsm').value;
+  const project=document.getElementById('fmProject').value.trim();
+  const name=document.getElementById('fmName').value.trim();
+  const status=document.getElementById('fmStatus').value;
+  const tester_type=document.getElementById('fmType').value;
+  const expiry_date=document.getElementById('fmExpiry').value||null;
+  const last_calibration=document.getElementById('fmCalib').value||null;
+  const calib_interval=document.getElementById('fmCalibInterval').value;
+  const eid=document.getElementById('eId').value;
+  if(!project||!name){showToast('Please fill in all fields.','err');return;}
+  if(tester_type==='temporary'&&!expiry_date){showToast('Please set an expiry date.','warn');return;}
+  setBtn('saveBtn',true,'Saving...');
+  let doc_path=null,doc_name=null;
+  if(pendingFile){
+    const fn=`${Date.now()}_${pendingFile.name.replace(/\s+/g,'_')}`;
+    const{data:up,error:ue}=await sb.storage.from('tester-docs').upload(fn,pendingFile,{upsert:true});
+    if(ue){showToast('PDF upload failed: '+ue.message,'err');setBtn('saveBtn',false,'Save Tester');return;}
+    doc_path=up.path;doc_name=pendingFile.name;
+  }
+  const plant=document.getElementById('fmPlant').value;
+  const payload={plant,bu,assembly,project,name,status,tester_type,expiry_date:tester_type==='temporary'?expiry_date:null,last_calibration,calib_interval,added_by_id:currentUser.emp_id,added_by_name:currentUser.name};
+  if(pendingFile){payload.doc_path=doc_path;payload.doc_name=doc_name;}
+  if(eid){
+    const{error}=await sb.from('testers').update(payload).eq('id',eid);
+    if(error){showToast('Update failed: '+error.message,'err');setBtn('saveBtn',false,'Save Tester');return;}
+    showToast('Tester updated!','ok');
+  }else{
+    payload.created_at=new Date().toISOString();
+    const{error}=await sb.from('testers').insert(payload);
+    if(error){showToast('Add failed: '+error.message,'err');setBtn('saveBtn',false,'Save Tester');return;}
+    showToast('Tester added!','ok');
+  }
+  setBtn('saveBtn',false,'Save Tester');closeModal('addModal');loadTesters();
+}
+async function deleteTester(id){
+  if(!currentUser||currentUser.role!=='Admin'){showToast('Admin access only.','err');return;}
+  const t=allTesters.find(x=>x.id===id);if(!t)return;
+  if(!confirm(`Delete "${t.name}"?`))return;
+  if(t.doc_path)await sb.storage.from('tester-docs').remove([t.doc_path]);
+  const{error}=await sb.from('testers').delete().eq('id',id);
+  if(error){showToast('Delete failed: '+error.message,'err');return;}
+  showToast('Tester deleted.','');loadTesters();
+}
+
+// ══ DOC VIEWER ══
+async function openDoc(id){
+  const t=allTesters.find(x=>x.id===id);if(!t)return;
+  document.getElementById('docTitle').textContent=t.name+' — Specification';
+  const content=document.getElementById('docContent');const dlBtn=document.getElementById('docDownload');
+  if(!t.doc_path){
+    content.innerHTML=`<div class="no-doc-box"><div style="font-size:36px;opacity:0.3">📁</div><span>No document uploaded yet.</span></div>`;dlBtn.style.display='none';
+  }else{
+    content.innerHTML=`<div style="text-align:center;padding:20px;color:var(--muted)">Loading PDF...</div>`;
+    const{data}=sb.storage.from('tester-docs').getPublicUrl(t.doc_path);
+    content.innerHTML=`<div class="pdf-frame"><iframe src="${data.publicUrl}"></iframe></div>`;
+    dlBtn.style.display='inline-flex';dlBtn.href=data.publicUrl;dlBtn.download=t.doc_name||'spec.pdf';
+  }
+  document.getElementById('docModal').classList.add('open');
+}
+
+// ══ QR CODE ══
+function showQR(id){
+  const t=allTesters.find(x=>x.id===id);if(!t)return;
+  document.getElementById('qrName').textContent=t.name;
+  document.getElementById('qrMeta').textContent=`${t.plant||''} · ${t.bu} · Assembly ${t.assembly} · ${t.project}`;
+  let qrUrl='';
+  if(t.doc_path){const{data}=sb.storage.from('tester-docs').getPublicUrl(t.doc_path);qrUrl=data.publicUrl;}
+  else{qrUrl=window.location.href.split('?')[0];showToast('No PDF uploaded yet. QR will open app.','warn');}
+  const enc=encodeURIComponent(qrUrl);
+  const qrSrc=`https://api.qrserver.com/v1/create-qr-code/?size=190x190&data=${enc}&ecc=M&margin=2`;
+  const img=document.getElementById('qrImg');
+  img.src=qrSrc;
+  img.onerror=function(){this.onerror=null;this.src=`https://chart.googleapis.com/chart?chs=190x190&cht=qr&chl=${enc}&choe=UTF-8`;};
+  window._qrPrint={name:t.name,bu:t.bu,asm:t.assembly,project:t.project,url:qrUrl,qrSrc};
+  document.getElementById('qrModal').classList.add('open');
+}
+function printQR(){
+  const d=window._qrPrint;if(!d)return;
+  const w=window.open('','_blank','width=400,height=540');
+  w.document.write(`<!DOCTYPE html><html><head><title>QR-${d.name}</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',sans-serif;text-align:center;padding:24px;background:#fff}
+.logo{width:60px;height:60px;object-fit:contain;margin-bottom:8px;border-radius:10px}
+.co{font-size:10px;color:#999;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px}
+.tname{font-size:20px;font-weight:700;color:#0b1f3a;margin-bottom:3px}
+.meta{font-size:11px;color:#666;margin-bottom:2px}.proj{font-size:13px;font-weight:600;color:#0057b8;margin-bottom:14px}
+.qrimg{width:200px;height:200px}hr{border:none;border-top:1px dashed #ddd;margin:12px auto;width:80%}
+.note{font-size:12px;color:#888;margin-top:8px}@media print{body{padding:12px}}</style></head><body>
+<img class="logo" src="${LOGO_URL}" alt="logo"/>
+<div class="co">Amphenol FCI &middot; Automation</div>
+<div class="tname">${d.name}</div><div class="meta">${d.bu} &middot; Assembly ${d.asm}</div>
+<div class="proj">${d.project}</div>
+<img class="qrimg" src="${d.qrSrc}" alt="QR Code"/>
+<hr/><div class="note">📱 Scan to open tester specification</div>
+<script>window.onload=()=>setTimeout(()=>window.print(),600)<\/script></body></html>`);
+  w.document.close();
+}
+
+// ══ ISSUE LOG ══
+let currentIssueTester=null;
+
+function openIssueModal(testerId){
+  const t=allTesters.find(x=>x.id===testerId);if(!t)return;
+  currentIssueTester=t;
+  document.getElementById('issueModalTitle').textContent=`Issues — ${t.project} (${t.bu} · Asm ${t.assembly})`;
+  document.getElementById('issueTesterId').value=testerId;
+  document.getElementById('issueDesc').value='';
+  document.getElementById('issueAction').value='';
+  document.getElementById('issueStatus').value='open';
+  loadIssuesForTester(testerId);
+  document.getElementById('issueModal').classList.add('open');
+}
+
+function openAddIssueGeneral(){
+  // Open issue modal with tester selection
+  if(!allTesters.length){showToast('No testers found. Add a tester first.','warn');return;}
+  currentIssueTester=allTesters[0];
+  document.getElementById('issueModalTitle').textContent='Log New Issue';
+  document.getElementById('issueTesterId').value=allTesters[0].id;
+  document.getElementById('issueDesc').value='';
+  document.getElementById('issueAction').value='';
+  document.getElementById('issueStatus').value='open';
+  loadIssuesForTester(null);
+  document.getElementById('issueModal').classList.add('open');
+}
+
+async function loadIssuesForTester(testerId){
+  const list=document.getElementById('issueList');
+  list.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted)">Loading...</div>';
+  let query=sb.from('issues').select('*').order('created_at',{ascending:false});
+  if(testerId)query=query.eq('tester_id',testerId);
+  const{data,error}=await query;
+  if(error){list.innerHTML='<div style="color:red;font-size:12px;padding:10px">Error: '+error.message+'</div>';return;}
+  if(!data||!data.length){list.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">No issues logged yet for this tester.</div>';return;}
+  list.innerHTML=data.map(issue=>{
+    const statusMap={open:'i-open',inprogress:'i-inprogress',fixed:'i-fixed'};
+    const statusLabel={open:'🔴 Open',inprogress:'🟡 In Progress',fixed:'✅ Fixed'};
+    return`<div class="issue-card ${issue.status||'open'}">
+      <div class="issue-card-header">
+        <span class="issue-card-title">${issue.description}</span>
+        <span class="issue-badge ${statusMap[issue.status||'open']}">${statusLabel[issue.status||'open']}</span>
+      </div>
+      ${issue.action_taken?`<div class="issue-card-action">🔧 Action: ${issue.action_taken}</div>`:''}
+      <div class="issue-card-meta">Logged by: <strong>${issue.logged_by_name||'—'}</strong> (${issue.logged_by_id||''}) · ${fmtDateTime(issue.created_at)}</div>
+      ${currentUser.role==='Admin'?`<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-outline btn-sm" onclick="updateIssueStatus(${issue.id},'open')">Open</button>
+        <button class="btn btn-amber btn-sm" onclick="updateIssueStatus(${issue.id},'inprogress')">In Progress</button>
+        <button class="btn btn-green btn-sm" onclick="updateIssueStatus(${issue.id},'fixed')">Fixed</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteIssue(${issue.id})">🗑</button>
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+
+async function saveIssue(){
+  const testerId=document.getElementById('issueTesterId').value;
+  const desc=document.getElementById('issueDesc').value.trim();
+  const action=document.getElementById('issueAction').value.trim();
+  const status=document.getElementById('issueStatus').value;
+  if(!desc){showToast('Please describe the issue.','warn');return;}
+  const t=allTesters.find(x=>x.id==testerId);
+  const{error}=await sb.from('issues').insert({
+    tester_id:parseInt(testerId),
+    tester_name:t?t.name:'',
+    tester_bu:t?t.bu:'',
+    tester_assembly:t?t.assembly:'',
+    tester_project:t?t.project:'',
+    description:desc,
+    action_taken:action||null,
+    status,
+    logged_by_id:currentUser.emp_id,
+    logged_by_name:currentUser.name,
+    created_at:new Date().toISOString()
+  });
+  if(error){showToast('Save failed: '+error.message,'err');return;}
+  showToast('Issue logged!','ok');
+  document.getElementById('issueDesc').value='';
+  document.getElementById('issueAction').value='';
+  document.getElementById('issueStatus').value='open';
+  loadIssuesForTester(testerId?parseInt(testerId):null);
+}
+
+async function updateIssueStatus(id,status){
+  const{error}=await sb.from('issues').update({status}).eq('id',id);
+  if(error){showToast('Error: '+error.message,'err');return;}
+  showToast('Status updated!','ok');
+  const tid=document.getElementById('issueTesterId').value;
+  loadIssuesForTester(tid?parseInt(tid):null);
+}
+
+async function deleteIssue(id){
+  if(!confirm('Delete this issue log?'))return;
+  const{error}=await sb.from('issues').delete().eq('id',id);
+  if(error){showToast('Error: '+error.message,'err');return;}
+  showToast('Issue deleted.','');
+  const tid=document.getElementById('issueTesterId').value;
+  loadIssuesForTester(tid?parseInt(tid):null);
+}
+
+// ══ ISSUE LOG PAGE ══
+function populateMonthDropdown(){
+  const sel=document.getElementById('iFilterMonth');
+  sel.innerHTML='<option value="">All Months</option>';
+  const months=[];
+  for(let i=0;i<12;i++){
+    const d=new Date();d.setMonth(d.getMonth()-i);
+    const val=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const lbl=d.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+    months.push(`<option value="${val}">${lbl}</option>`);
+  }
+  sel.innerHTML+= months.join('');
+}
+
+async function loadIssues(){
+  document.getElementById('issuesLoading').style.display='block';
+  document.getElementById('issuesTableWrap').style.display='none';
+  const project=document.getElementById('iFilterProject').value;
+  const status=document.getElementById('iFilterStatus').value;
+  const month=document.getElementById('iFilterMonth').value;
+  let query=sb.from('issues').select('*').order('created_at',{ascending:false});
+  if(project)query=query.eq('tester_project',project);
+  if(status)query=query.eq('status',status);
+  if(month){query=query.gte('created_at',month+'-01').lt('created_at',nextMonth(month)+'-01');}
+  const{data,error}=await query;
+  document.getElementById('issuesLoading').style.display='none';
+  document.getElementById('issuesTableWrap').style.display='block';
+  if(error){showToast('Error: '+error.message,'err');return;}
+  allIssues=data||[];
+  document.getElementById('issueCountPill').textContent=allIssues.length;
+  renderIssuesTable(allIssues);
+}
+
+function nextMonth(ym){
+  const[y,m]=ym.split('-').map(Number);
+  return m===12?`${y+1}-01`:`${y}-${String(m+1).padStart(2,'0')}`;
+}
+
+function renderIssuesTable(issues){
+  const isAdmin=currentUser&&currentUser.role==='Admin';
+  const tbody=document.getElementById('issuesBody');
+  const empty=document.getElementById('issuesEmpty');
+  if(!issues.length){tbody.innerHTML='';empty.classList.remove('hidden');return;}
+  empty.classList.add('hidden');
+  const statusMap={open:'i-open',inprogress:'i-inprogress',fixed:'i-fixed'};
+  const statusLabel={open:'🔴 Open',inprogress:'🟡 In Progress',fixed:'✅ Fixed'};
+  tbody.innerHTML=issues.map(i=>`
+    <tr>
+      <td style="font-size:12px;white-space:nowrap">${fmtDate(i.created_at)}</td>
+      <td><strong>${i.tester_project||i.tester_name||'—'}</strong></td>
+      <td><span class="bu-tag ${buClass(i.tester_bu||'')}">${i.tester_bu||'—'}</span><br><small>Asm ${i.tester_assembly||'—'}</small></td>
+      <td style="max-width:220px">${i.description}</td>
+      <td style="max-width:180px;color:var(--green2)">${i.action_taken||'—'}</td>
+      <td><span class="issue-badge ${statusMap[i.status||'open']}">${statusLabel[i.status||'open']}</span></td>
+      <td><div class="audit-cell"><div class="audit-who">${i.logged_by_name||'—'}</div><div style="font-size:10px;font-family:'IBM Plex Mono',monospace">${i.logged_by_id||''}</div></div></td>
+      <td class="${isAdmin?'':'hidden'}">
+        <div class="td-actions">
+          <button class="btn btn-green btn-sm" onclick="updateIssueStatusPage(${i.id},'fixed')">✅ Fixed</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteIssuePage(${i.id})">🗑</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+async function updateIssueStatusPage(id,status){
+  const{error}=await sb.from('issues').update({status}).eq('id',id);
+  if(error){showToast('Error: '+error.message,'err');return;}
+  showToast('Marked as fixed!','ok');loadIssues();
+}
+async function deleteIssuePage(id){
+  if(!confirm('Delete this issue?'))return;
+  const{error}=await sb.from('issues').delete().eq('id',id);
+  if(error){showToast('Error: '+error.message,'err');return;}
+  showToast('Deleted.','');loadIssues();
+}
+
+// ══ REPORTS ══
+async function generateReport(){
+  const month=document.getElementById('rMonth').value;
+  const tester=document.getElementById('rTester').value;
+  const bu=document.getElementById('rBU').value;
+  if(!month){showToast('Please select a month.','warn');return;}
+  let query=sb.from('issues').select('*').order('created_at',{ascending:false})
+    .gte('created_at',month+'-01').lt('created_at',nextMonth(month)+'-01');
+  if(tester)query=query.eq('tester_id',parseInt(tester));
+  if(bu)query=query.eq('tester_bu',bu);
+  const{data,error}=await query;
+  if(error){showToast('Error: '+error.message,'err');return;}
+  const issues=data||[];
+  // Summary
+  document.getElementById('reportSummary').style.display='grid';
+  document.getElementById('rTotalIssues').textContent=issues.length;
+  document.getElementById('rOpenIssues').textContent=issues.filter(i=>i.status==='open').length;
+  document.getElementById('rFixedIssues').textContent=issues.filter(i=>i.status==='fixed').length;
+  document.getElementById('rInprogIssues').textContent=issues.filter(i=>i.status==='inprogress').length;
+  // Table
+  document.getElementById('reportTableWrap').style.display='block';
+  const statusLabel={open:'🔴 Open',inprogress:'🟡 In Progress',fixed:'✅ Fixed'};
+  const tbody=document.getElementById('reportBody');
+  if(!issues.length){tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--muted)">No issues found for this period.</td></tr>`;return;}
+  tbody.innerHTML=issues.map(i=>`
+    <tr>
+      <td style="font-size:12px;white-space:nowrap">${fmtDateTime(i.created_at)}</td>
+      <td><strong>${i.tester_project||i.tester_name||'—'}</strong></td>
+      <td>${i.tester_bu||'—'} · Asm ${i.tester_assembly||'—'}</td>
+      <td>${i.description}</td>
+      <td style="color:var(--green2)">${i.action_taken||'—'}</td>
+      <td>${statusLabel[i.status||'open']}</td>
+      <td>${i.logged_by_name||'—'} (${i.logged_by_id||''})</td>
+    </tr>`).join('');
+}
+
+async function exportReport(){
+  const month=document.getElementById('rMonth').value;
+  if(!month){showToast('Please select a month first, then Generate.','warn');return;}
+  const project=document.getElementById('rProject').value;
+  const bu=document.getElementById('rBU').value;
+  let query=sb.from('issues').select('*').order('created_at',{ascending:false})
+    .gte('created_at',month+'-01').lt('created_at',nextMonth(month)+'-01');
+  if(project)query=query.eq('tester_project',project);
+  if(bu)query=query.eq('tester_bu',bu);
+  const{data,error}=await query;
+  if(error){showToast('Error: '+error.message,'err');return;}
+  const issues=data||[];
+  if(!issues.length){showToast('No issues found for this period.','warn');return;}
+  const rows=[['Date','Project Name','BU','Assembly','Issue Description','Action Taken','Status','Logged By','Employee ID']];
+  issues.forEach(i=>rows.push([
+    fmtDateTime(i.created_at),i.tester_project||i.tester_name||'',i.tester_bu||'',
+    'Assembly '+(i.tester_assembly||''),i.description,
+    i.action_taken||'',i.status||'open',
+    i.logged_by_name||'',i.logged_by_id||''
+  ]));
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`Issue_Report_${month}.csv`;a.click();
+  URL.revokeObjectURL(url);
+  showToast('Report downloaded!','ok');
+}
+
+// ══ EXPORT TESTERS EXCEL ══
+function exportExcel(){
+  const rows=[['Plant','BU','Assembly','Project','Tester Name','Status','Type','Last Calibration','Next Calibration Due','Expiry Date','Document','Added By','Added By ID']];
+  allTesters.forEach(t=>{
+    let nextCalib='';
+    if(t.last_calibration&&t.calib_interval){const next=new Date(t.last_calibration);next.setMonth(next.getMonth()+parseInt(t.calib_interval));nextCalib=fmtDate(next.toISOString());}
+    rows.push([t.plant||'—',t.bu,'Assembly '+t.assembly,t.project,t.name,t.status||'active',t.tester_type||'permanent',fmtDate(t.last_calibration),nextCalib,fmtDate(t.expiry_date),t.doc_name||'No document',t.added_by_name||'',t.added_by_id||'']);
+  });
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`Tester_Database_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+  URL.revokeObjectURL(url);showToast('Excel downloaded!','ok');
+}
+
+// ══ USERS ══
+async function loadUsers(){
+  document.getElementById('usersLoading').style.display='block';
+  document.getElementById('usersWrap').style.display='none';
+  const{data,error}=await sb.from('users').select('*').order('approved',{ascending:true}).order('created_at',{ascending:false});
+  document.getElementById('usersLoading').style.display='none';
+  document.getElementById('usersWrap').style.display='block';
+  if(error){showToast('Error: '+error.message,'err');return;}
+  document.getElementById('userCountPill').textContent=(data||[]).length;
+  const tbody=document.getElementById('usersBody');
+  if(!data||!data.length){tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">No users yet.</td></tr>`;return;}
+  tbody.innerHTML=data.map(u=>{
+    const isAdm=ADMIN_IDS.includes(u.emp_id);
+    const roleLbl=isAdm?`<span class="type-badge badge-perm">Admin</span>`:`<span class="type-badge" style="background:#f0f4f9;color:var(--muted)">Technician</span>`;
+    const status=u.approved?`<span class="status-badge s-active">✅ Approved</span>`:`<span class="type-badge badge-temp">⏳ Pending</span>`;
+    const actions=u.emp_id===currentUser.emp_id?'<span style="font-size:12px;color:var(--muted2)">— You —</span>':`
+      ${!u.approved?`<button class="btn btn-green btn-sm" onclick="approveUser(${u.id})">✔ Approve</button>`:''}
+      ${!isAdm?`<button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id},'${u.emp_id}')">🗑 Remove</button>`:''}`;
+    return`<tr class="${!u.approved?'pending-row':''}">
+      <td><strong style="font-family:'IBM Plex Mono',monospace">${u.emp_id}</strong></td>
+      <td>${u.full_name}</td><td>${roleLbl}</td><td>${status}</td>
+      <td style="font-size:12px;color:var(--muted)">${fmtDate(u.created_at)}</td>
+      <td><div class="td-actions">${actions}</div></td>
+    </tr>`;
+  }).join('');
+}
+async function approveUser(id){const{error}=await sb.from('users').update({approved:true}).eq('id',id);if(error){showToast('Error: '+error.message,'err');return;}showToast('User approved!','ok');loadUsers();}
+async function deleteUser(id,empId){if(!confirm(`Remove ${empId}?`))return;const{error}=await sb.from('users').delete().eq('id',id);if(error){showToast('Error: '+error.message,'err');return;}showToast('Removed.','');loadUsers();}
+
+// ══ UTILS ══
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-bg').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
+let toastTimer;
+function showToast(msg,type){
+  clearTimeout(toastTimer);const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast '+(type||'');t.classList.add('show');
+  toastTimer=setTimeout(()=>t.classList.remove('show'),3500);
+}
+document.getElementById('lPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('lEmpId').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+populateMonthDropdown();
+</script>
+
+<!--
+╔══════════════════════════════════════════════╗
+║  SUPABASE SQL — Run these in SQL Editor      ║
+╠══════════════════════════════════════════════╣
+║                                              ║
+║  -- Add plant column to testers:             ║
+║  ALTER TABLE testers                         ║
+║    ADD COLUMN IF NOT EXISTS                  ║
+║      plant TEXT DEFAULT 'Plant 1';           ║
+║                                              ║
+║  -- Add project column to issues:            ║
+║  ALTER TABLE issues                          ║
+║    ADD COLUMN IF NOT EXISTS                  ║
+║      tester_project TEXT;                    ║
+║                                              ║
+╚══════════════════════════════════════════════╝
+-->
+<!--
+╔══════════════════════════════════════════╗
+║  SUPABASE SQL — Run in SQL Editor        ║
+╠══════════════════════════════════════════╣
+║                                          ║
+║  -- Add new columns to testers table:    ║
+║  ALTER TABLE testers                     ║
+║    ADD COLUMN IF NOT EXISTS status       ║
+║      TEXT DEFAULT 'active',              ║
+║    ADD COLUMN IF NOT EXISTS              ║
+║      last_calibration DATE,              ║
+║    ADD COLUMN IF NOT EXISTS              ║
+║      calib_interval INTEGER DEFAULT 6;   ║
+║                                          ║
+║  -- Create issues table:                 ║
+║  CREATE TABLE issues (                   ║
+║    id BIGSERIAL PRIMARY KEY,             ║
+║    tester_id BIGINT,                     ║
+║    tester_name TEXT,                     ║
+║    tester_bu TEXT,                       ║
+║    tester_assembly TEXT,                 ║
+║    description TEXT NOT NULL,            ║
+║    action_taken TEXT,                    ║
+║    status TEXT DEFAULT 'open',           ║
+║    logged_by_id TEXT,                    ║
+║    logged_by_name TEXT,                  ║
+║    created_at TIMESTAMPTZ DEFAULT NOW()  ║
+║  );                                      ║
+║  ALTER TABLE issues ENABLE ROW LEVEL     ║
+║    SECURITY;                             ║
+║  CREATE POLICY "Public issues"           ║
+║    ON issues FOR ALL                     ║
+║    USING (true) WITH CHECK (true);       ║
+╚══════════════════════════════════════════╝
+-->
+</body>
+</html>
