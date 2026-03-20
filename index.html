@@ -771,13 +771,10 @@ async function loadTesters(){
 
 function populateTesterDropdowns(){
   const opts=allTesters.map(t=>`<option value="${t.id}">${t.name} (${t.bu})</option>`).join('');
-  // Issue log filter — show project names
+  // Unique project names for both Issue log and Report filters
   const projects=[...new Set(allTesters.map(t=>t.project))];
   const projOpts=projects.map(p=>`<option value="${p}">${p}</option>`).join('');
   document.getElementById('iFilterProject').innerHTML='<option value="">All Projects</option>'+projOpts;
-  // Project dropdown — unique project names
-  const projects=[...new Set(allTesters.map(t=>t.project))];
-  const projOpts=projects.map(p=>`<option value="${p}">${p}</option>`).join('');
   document.getElementById('rProject').innerHTML='<option value="">All Projects</option>'+projOpts;
 }
 
