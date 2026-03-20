@@ -874,12 +874,12 @@ function renderRows(rows){
       <td><button class="btn btn-qr" onclick="showQR(${t.id})">⬛ QR</button></td>
       <td><button class="btn btn-purple btn-sm" onclick="openIssueModal(${t.id})">🔍 Issues</button></td>
       <td><div class="audit-cell"><div class="audit-who">${t.added_by_name||'—'}</div><div style="font-size:10px;font-family:'IBM Plex Mono',monospace">${t.added_by_id||''}</div></div></td>
-      <td class="${isAdmin?'':'hidden'}">
+      ${isAdmin?`<td>
         <div class="td-actions">
           <button class="btn btn-outline btn-sm" onclick="openEdit(${t.id})">✏ Edit</button>
           <button class="btn btn-danger btn-sm" onclick="deleteTester(${t.id})">🗑</button>
         </div>
-      </td>
+      </td>`:''}
     </tr>`;
   }).join('');
 }
@@ -887,6 +887,7 @@ function renderRows(rows){
 // ══ ADD / EDIT TESTER ══
 function toggleExpiry(){document.getElementById('expiryGroup').style.display=document.getElementById('fmType').value==='temporary'?'block':'none';}
 function openAdd(){
+  if(!currentUser||currentUser.role!=='Admin'){showToast('Admin access only.','err');return;}
   document.getElementById('addModalTitle').textContent='Add New Tester';
   document.getElementById('eId').value='';
   ['fmBU','fmAsm','fmProject','fmName','fmExpiry','fmCalib'].forEach(id=>{const el=document.getElementById(id);if(el.tagName==='SELECT'){}else el.value='';});
@@ -896,6 +897,7 @@ function openAdd(){
   resetUpload();pendingFile=null;document.getElementById('addModal').classList.add('open');
 }
 function openEdit(id){
+  if(!currentUser||currentUser.role!=='Admin'){showToast('Admin access only.','err');return;}
   const t=allTesters.find(x=>x.id===id);if(!t)return;
   document.getElementById('addModalTitle').textContent='Edit Tester';
   document.getElementById('eId').value=id;
@@ -921,6 +923,7 @@ function onFileSelect(e){
   document.getElementById('uploadArea').classList.add('has-file');
 }
 async function saveTester(){
+  if(!currentUser||currentUser.role!=='Admin'){showToast('Admin access only.','err');return;}
   const bu=document.getElementById('fmBU').value;
   const assembly=document.getElementById('fmAsm').value;
   const project=document.getElementById('fmProject').value.trim();
@@ -956,6 +959,7 @@ async function saveTester(){
   setBtn('saveBtn',false,'Save Tester');closeModal('addModal');loadTesters();
 }
 async function deleteTester(id){
+  if(!currentUser||currentUser.role!=='Admin'){showToast('Admin access only.','err');return;}
   const t=allTesters.find(x=>x.id===id);if(!t)return;
   if(!confirm(`Delete "${t.name}"?`))return;
   if(t.doc_path)await sb.storage.from('tester-docs').remove([t.doc_path]);
