@@ -139,6 +139,10 @@ tr.row-oos td{background:#fff0f0}
 .bu-CMIO{background:#dbeafe;color:#1e40af}
 .bu-ACPA{background:#d1fae5;color:#065f46}
 .bu-BASICS{background:#ede9fe;color:#5b21b6}
+.plant-tag{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700}
+.plant-1{background:#f0fdf4;color:#166534}
+.plant-2{background:#eff6ff;color:#1e40af}
+.plant-3{background:#fdf4ff;color:#7e22ce}
 .type-badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700}
 .badge-perm{background:#e0f2fe;color:#0369a1}
 .badge-temp{background:var(--amber-bg);color:var(--amber-text)}
@@ -383,6 +387,12 @@ const LOGO_URL = 'https://i.ibb.co/84KHnbHz/Screenshot-2026-03-18-095011.png';
     </div>
 
     <div class="toolbar">
+      <select id="fPlant" onchange="filterTable()">
+        <option value="">All Plants</option>
+        <option value="Plant 1">Plant 1</option>
+        <option value="Plant 2">Plant 2</option>
+        <option value="Plant 3">Plant 3</option>
+      </select>
       <select id="fBU" onchange="filterTable()">
         <option value="">All BU</option>
         <option>POWER BU</option><option>CMIO</option>
@@ -418,7 +428,7 @@ const LOGO_URL = 'https://i.ibb.co/84KHnbHz/Screenshot-2026-03-18-095011.png';
       <table>
         <thead>
           <tr>
-            <th>BU</th><th>Assembly</th><th>Project</th><th>Tester Name</th>
+            <th>Plant</th><th>BU</th><th>Assembly</th><th>Project</th><th>Tester Name</th>
             <th>Status</th><th>Type</th><th>Calibration</th>
             <th>Document</th><th>QR Code</th><th>Issues</th><th>Added By</th>
             <th id="actionHead" class="hidden">Actions</th>
@@ -442,8 +452,8 @@ const LOGO_URL = 'https://i.ibb.co/84KHnbHz/Screenshot-2026-03-18-095011.png';
       <button class="btn btn-accent" onclick="openAddIssueGeneral()">+ Log New Issue</button>
     </div>
     <div class="toolbar">
-      <select id="iFilterTester" onchange="loadIssues()">
-        <option value="">All Testers</option>
+      <select id="iFilterProject" onchange="loadIssues()">
+        <option value="">All Projects</option>
       </select>
       <select id="iFilterStatus" onchange="loadIssues()">
         <option value="">All Status</option>
@@ -539,6 +549,14 @@ const LOGO_URL = 'https://i.ibb.co/84KHnbHz/Screenshot-2026-03-18-095011.png';
   <div class="modal">
     <div class="modal-title" id="addModalTitle">Add New Tester</div>
     <input type="hidden" id="eId"/>
+    <div class="form-group">
+      <label>Plant</label>
+      <select id="fmPlant">
+        <option value="Plant 1">Plant 1</option>
+        <option value="Plant 2">Plant 2</option>
+        <option value="Plant 3">Plant 3</option>
+      </select>
+    </div>
     <div class="form-row-2">
       <div class="form-group"><label>Business Unit</label>
         <select id="fmBU"><option>POWER BU</option><option>CMIO</option><option>ACPA</option><option>BASICS</option></select></div>
@@ -753,7 +771,10 @@ async function loadTesters(){
 
 function populateTesterDropdowns(){
   const opts=allTesters.map(t=>`<option value="${t.id}">${t.name} (${t.bu})</option>`).join('');
-  document.getElementById('iFilterTester').innerHTML='<option value="">All Testers</option>'+opts;
+  // Issue log filter — show project names
+  const projects=[...new Set(allTesters.map(t=>t.project))];
+  const projOpts=projects.map(p=>`<option value="${p}">${p}</option>`).join('');
+  document.getElementById('iFilterProject').innerHTML='<option value="">All Projects</option>'+projOpts;
   // Project dropdown — unique project names
   const projects=[...new Set(allTesters.map(t=>t.project))];
   const projOpts=projects.map(p=>`<option value="${p}">${p}</option>`).join('');
@@ -811,6 +832,7 @@ function checkAlerts(){
 // ══ FILTER TABLE ══
 function isExpired(t){return t.tester_type==='temporary'&&t.expiry_date&&new Date(t.expiry_date)<new Date();}
 function filterTable(){
+  const plant=document.getElementById('fPlant').value;
   const bu=document.getElementById('fBU').value;
   const asm=document.getElementById('fAsm').value;
   const status=document.getElementById('fStatus').value;
@@ -818,6 +840,7 @@ function filterTable(){
   const q=document.getElementById('fSearch').value.toLowerCase();
   const showExp=document.getElementById('fShowExpired').checked;
   const filtered=allTesters.filter(t=>{
+    if(plant&&t.plant!==plant)return false;
     if(bu&&t.bu!==bu)return false;
     if(asm&&t.assembly!==asm)return false;
     if(status&&(t.status||'active')!==status)return false;
@@ -862,7 +885,9 @@ function renderRows(rows){
   tbody.innerHTML=rows.map(t=>{
     const cal=calibStatus(t);
     let rowClass=isExpired(t)?'row-expired':t.status==='maintenance'?'row-maintenance':t.status==='outofservice'?'row-oos':'';
+    const plantClass={'Plant 1':'plant-1','Plant 2':'plant-2','Plant 3':'plant-3'}[t.plant]||'plant-1';
     return`<tr class="${rowClass}">
+      <td><span class="plant-tag ${plantClass}">${t.plant||'—'}</span></td>
       <td><span class="bu-tag ${buClass(t.bu)}">${t.bu}</span></td>
       <td>Assembly ${t.assembly}</td>
       <td>${t.project}</td>
@@ -891,6 +916,7 @@ function openAdd(){
   document.getElementById('addModalTitle').textContent='Add New Tester';
   document.getElementById('eId').value='';
   ['fmBU','fmAsm','fmProject','fmName','fmExpiry','fmCalib'].forEach(id=>{const el=document.getElementById(id);if(el.tagName==='SELECT'){}else el.value='';});
+  document.getElementById('fmPlant').value='Plant 1';
   document.getElementById('fmBU').value='POWER BU';document.getElementById('fmAsm').value='1';
   document.getElementById('fmStatus').value='active';document.getElementById('fmType').value='permanent';
   document.getElementById('fmCalibInterval').value='6';document.getElementById('expiryGroup').style.display='none';
@@ -901,6 +927,7 @@ function openEdit(id){
   const t=allTesters.find(x=>x.id===id);if(!t)return;
   document.getElementById('addModalTitle').textContent='Edit Tester';
   document.getElementById('eId').value=id;
+  document.getElementById('fmPlant').value=t.plant||'Plant 1';
   document.getElementById('fmBU').value=t.bu;document.getElementById('fmAsm').value=t.assembly;
   document.getElementById('fmProject').value=t.project;document.getElementById('fmName').value=t.name;
   document.getElementById('fmStatus').value=t.status||'active';document.getElementById('fmType').value=t.tester_type||'permanent';
@@ -944,7 +971,8 @@ async function saveTester(){
     if(ue){showToast('PDF upload failed: '+ue.message,'err');setBtn('saveBtn',false,'Save Tester');return;}
     doc_path=up.path;doc_name=pendingFile.name;
   }
-  const payload={bu,assembly,project,name,status,tester_type,expiry_date:tester_type==='temporary'?expiry_date:null,last_calibration,calib_interval,added_by_id:currentUser.emp_id,added_by_name:currentUser.name};
+  const plant=document.getElementById('fmPlant').value;
+  const payload={plant,bu,assembly,project,name,status,tester_type,expiry_date:tester_type==='temporary'?expiry_date:null,last_calibration,calib_interval,added_by_id:currentUser.emp_id,added_by_name:currentUser.name};
   if(pendingFile){payload.doc_path=doc_path;payload.doc_name=doc_name;}
   if(eid){
     const{error}=await sb.from('testers').update(payload).eq('id',eid);
@@ -988,7 +1016,7 @@ async function openDoc(id){
 function showQR(id){
   const t=allTesters.find(x=>x.id===id);if(!t)return;
   document.getElementById('qrName').textContent=t.name;
-  document.getElementById('qrMeta').textContent=`${t.bu} · Assembly ${t.assembly} · ${t.project}`;
+  document.getElementById('qrMeta').textContent=`${t.plant||''} · ${t.bu} · Assembly ${t.assembly} · ${t.project}`;
   let qrUrl='';
   if(t.doc_path){const{data}=sb.storage.from('tester-docs').getPublicUrl(t.doc_path);qrUrl=data.publicUrl;}
   else{qrUrl=window.location.href.split('?')[0];showToast('No PDF uploaded yet. QR will open app.','warn');}
@@ -1139,11 +1167,11 @@ function populateMonthDropdown(){
 async function loadIssues(){
   document.getElementById('issuesLoading').style.display='block';
   document.getElementById('issuesTableWrap').style.display='none';
-  const tester=document.getElementById('iFilterTester').value;
+  const project=document.getElementById('iFilterProject').value;
   const status=document.getElementById('iFilterStatus').value;
   const month=document.getElementById('iFilterMonth').value;
   let query=sb.from('issues').select('*').order('created_at',{ascending:false});
-  if(tester)query=query.eq('tester_id',parseInt(tester));
+  if(project)query=query.eq('tester_project',project);
   if(status)query=query.eq('status',status);
   if(month){query=query.gte('created_at',month+'-01').lt('created_at',nextMonth(month)+'-01');}
   const{data,error}=await query;
@@ -1265,11 +1293,11 @@ async function exportReport(){
 
 // ══ EXPORT TESTERS EXCEL ══
 function exportExcel(){
-  const rows=[['BU','Assembly','Project','Tester Name','Status','Type','Last Calibration','Next Calibration Due','Expiry Date','Document','Added By','Added By ID']];
+  const rows=[['Plant','BU','Assembly','Project','Tester Name','Status','Type','Last Calibration','Next Calibration Due','Expiry Date','Document','Added By','Added By ID']];
   allTesters.forEach(t=>{
     let nextCalib='';
     if(t.last_calibration&&t.calib_interval){const next=new Date(t.last_calibration);next.setMonth(next.getMonth()+parseInt(t.calib_interval));nextCalib=fmtDate(next.toISOString());}
-    rows.push([t.bu,'Assembly '+t.assembly,t.project,t.name,t.status||'active',t.tester_type||'permanent',fmtDate(t.last_calibration),nextCalib,fmtDate(t.expiry_date),t.doc_name||'No document',t.added_by_name||'',t.added_by_id||'']);
+    rows.push([t.plant||'—',t.bu,'Assembly '+t.assembly,t.project,t.name,t.status||'active',t.tester_type||'permanent',fmtDate(t.last_calibration),nextCalib,fmtDate(t.expiry_date),t.doc_name||'No document',t.added_by_name||'',t.added_by_id||'']);
   });
   const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
   const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
