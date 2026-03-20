@@ -470,7 +470,7 @@ const LOGO_URL = 'https://i.ibb.co/84KHnbHz/Screenshot-2026-03-18-095011.png';
       <table>
         <thead>
           <tr>
-            <th>Date</th><th>Tester</th><th>BU / Assembly</th>
+            <th>Date</th><th>Project</th><th>BU / Assembly</th>
             <th>Issue Description</th><th>Action Taken</th>
             <th>Status</th><th>Logged By</th>
             <th id="issueActionHead" class="hidden">Actions</th>
@@ -1055,7 +1055,7 @@ let currentIssueTester=null;
 function openIssueModal(testerId){
   const t=allTesters.find(x=>x.id===testerId);if(!t)return;
   currentIssueTester=t;
-  document.getElementById('issueModalTitle').textContent=`Issues — ${t.name} (${t.bu} · Asm ${t.assembly})`;
+  document.getElementById('issueModalTitle').textContent=`Issues — ${t.project} (${t.bu} · Asm ${t.assembly})`;
   document.getElementById('issueTesterId').value=testerId;
   document.getElementById('issueDesc').value='';
   document.getElementById('issueAction').value='';
@@ -1199,7 +1199,7 @@ function renderIssuesTable(issues){
   tbody.innerHTML=issues.map(i=>`
     <tr>
       <td style="font-size:12px;white-space:nowrap">${fmtDate(i.created_at)}</td>
-      <td><strong>${i.tester_name||'—'}</strong></td>
+      <td><strong>${i.tester_project||i.tester_name||'—'}</strong></td>
       <td><span class="bu-tag ${buClass(i.tester_bu||'')}">${i.tester_bu||'—'}</span><br><small>Asm ${i.tester_assembly||'—'}</small></td>
       <td style="max-width:220px">${i.description}</td>
       <td style="max-width:180px;color:var(--green2)">${i.action_taken||'—'}</td>
@@ -1253,7 +1253,7 @@ async function generateReport(){
   tbody.innerHTML=issues.map(i=>`
     <tr>
       <td style="font-size:12px;white-space:nowrap">${fmtDateTime(i.created_at)}</td>
-      <td><strong>${i.tester_name||'—'}</strong></td>
+      <td><strong>${i.tester_project||i.tester_name||'—'}</strong></td>
       <td>${i.tester_bu||'—'} · Asm ${i.tester_assembly||'—'}</td>
       <td>${i.description}</td>
       <td style="color:var(--green2)">${i.action_taken||'—'}</td>
@@ -1275,9 +1275,9 @@ async function exportReport(){
   if(error){showToast('Error: '+error.message,'err');return;}
   const issues=data||[];
   if(!issues.length){showToast('No issues found for this period.','warn');return;}
-  const rows=[['Date','Tester Name','BU','Assembly','Issue Description','Action Taken','Status','Logged By','Employee ID']];
+  const rows=[['Date','Project Name','BU','Assembly','Issue Description','Action Taken','Status','Logged By','Employee ID']];
   issues.forEach(i=>rows.push([
-    fmtDateTime(i.created_at),i.tester_name||'',i.tester_bu||'',
+    fmtDateTime(i.created_at),i.tester_project||i.tester_name||'',i.tester_bu||'',
     'Assembly '+(i.tester_assembly||''),i.description,
     i.action_taken||'',i.status||'open',
     i.logged_by_name||'',i.logged_by_id||''
@@ -1349,6 +1349,23 @@ document.getElementById('lEmpId').addEventListener('keydown',e=>{if(e.key==='Ent
 populateMonthDropdown();
 </script>
 
+<!--
+╔══════════════════════════════════════════════╗
+║  SUPABASE SQL — Run these in SQL Editor      ║
+╠══════════════════════════════════════════════╣
+║                                              ║
+║  -- Add plant column to testers:             ║
+║  ALTER TABLE testers                         ║
+║    ADD COLUMN IF NOT EXISTS                  ║
+║      plant TEXT DEFAULT 'Plant 1';           ║
+║                                              ║
+║  -- Add project column to issues:            ║
+║  ALTER TABLE issues                          ║
+║    ADD COLUMN IF NOT EXISTS                  ║
+║      tester_project TEXT;                    ║
+║                                              ║
+╚══════════════════════════════════════════════╝
+-->
 <!--
 ╔══════════════════════════════════════════╗
 ║  SUPABASE SQL — Run in SQL Editor        ║
