@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Tester Monitoring — Amphenol FCI</title>
+<link rel="icon" type="image/png" href="https://i.ibb.co/84KHnbHz/Screenshot-2026-03-18-095011.png"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0b1f3a;--navy2:#162f52;--accent:#0078d4;
+  --green:#00875a;--green2:#006644;--amber:#d97706;
+  --amber-bg:#fef3c7;--amber-text:#92400e;
+  --red:#dc2626;--red-bg:#fee2e2;--red-text:#991b1b;
+  --light:#f0f4f9;--white:#fff;--border:#d5dce8;--border2:#e8ecf3;
+  --text:#0d1b2e;--muted:#5a6a82;--muted2:#8896aa;
+  --shadow:0 2px 16px rgba(0,0,0,0.09);
+}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--light);color:var(--text);min-height:100vh;font-size:14px}
+header{background:var(--navy);color:#fff;padding:0;height:72px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,0.3);position:sticky;top:0;z-index:50}
+.logo-area{display:flex;align-items:center;gap:0;height:100%}
+.logo-box{width:160px;height:100%;background:#0a1828;display:flex;align-items:center;justify-content:center;padding:8px 14px;flex-shrink:0;border-right:1px solid rgba(255,255,255,0.1)}
+.logo-box img{width:100%;height:100%;object-fit:contain;filter:brightness(1.1)}
+.brand-main{font-size:16px;font-weight:700;line-height:1.2;padding-left:18px}
+.brand-sub{font-size:10px;opacity:0.6;letter-spacing:1.5px;text-transform:uppercase;padding-left:18px}
+.sys-label{font-size:16px;font-weight:700;letter-spacing:0.3px;padding-right:24px}
+.hdr-right{display:flex;align-items:center;gap:10px;padding-right:24px}
+.role-pill{padding:3px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase}
+.role-admin{background:rgba(0,120,212,0.25);color:#7ec8ff;border:1px solid rgba(126,200,255,0.3)}
+.role-tech{background:rgba(0,135,90,0.25);color:#6ee7b7;border:1px solid rgba(110,231,183,0.3)}
+.user-chip{display:flex;align-items:center;gap:8px;padding:5px 10px 5px 6px;border-radius:24px;border:1px solid rgba(255,255,255,0.12)}
+.avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+.av-admin{background:var(--accent)}.av-tech{background:var(--green)}
+.user-name{font-size:13px;font-weight:600;line-height:1.2}
+.user-id{font-size:10px;opacity:0.55;font-family:'IBM Plex Mono',monospace}
+.logout-btn{background:rgba(220,38,38,0.15);color:#fca5a5;border:1px solid rgba(220,38,38,0.3);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;display:flex;align-items:center;gap:5px;transition:all 0.2s}
+.logout-btn:hover{background:rgba(220,38,38,0.3);color:#fff}
+.auth-overlay{position:fixed;inset:0;background:var(--navy);z-index:200;display:flex;align-items:center;justify-content:center}
+.auth-card{background:#fff;border-radius:20px;padding:44px 40px;width:400px;box-shadow:0 32px 80px rgba(0,0,0,0.5)}
+.auth-logo{width:120px;height:120px;border-radius:20px;overflow:hidden;background:#fff;border:2px solid #e8ecf3;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;padding:4px;box-shadow:0 4px 20px rgba(0,0,0,0.12)}
+.auth-logo img{width:100%;height:100%;object-fit:contain}
+.auth-brand{text-align:center;font-size:21px;font-weight:700;color:var(--navy)}
+.auth-dept{text-align:center;font-size:12px;font-weight:600;color:var(--accent);letter-spacing:0.5px;margin-top:3px}
+.auth-sub{text-align:center;font-size:11px;color:var(--muted);margin-bottom:28px;letter-spacing:0.6px;text-transform:uppercase;margin-top:8px;padding-top:8px;border-top:1px solid var(--border2)}
+.auth-tabs{display:flex;border:1.5px solid var(--border);border-radius:10px;margin-bottom:24px;overflow:hidden}
+.auth-tab{flex:1;padding:9px;font-size:13px;font-weight:600;text-align:center;cursor:pointer;background:#fff;color:var(--muted);border:none;font-family:'IBM Plex Sans',sans-serif;transition:all 0.2s}
+.auth-tab.active{background:var(--navy);color:#fff}
+.form-group{margin-bottom:15px}
+.form-group label{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px}
+.form-group input,.form-group select,.form-group textarea{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px 13px;font-size:14px;font-family:'IBM Plex Sans',sans-serif;color:var(--text);outline:none;background:#fff;transition:border-color 0.2s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent)}
+.form-group textarea{resize:vertical;min-height:80px}
+.auth-btn{width:100%;background:var(--navy);color:#fff;border:none;border-radius:9px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;transition:background 0.2s;margin-top:4px}
+.auth-btn:hover{background:var(--navy2)}
+.auth-btn:disabled{opacity:0.6;cursor:not-allowed}
+.msg-err{color:var(--red);font-size:12px;margin-bottom:10px;padding:8px 12px;background:var(--red-bg);border-radius:6px;display:none}
+.msg-ok{color:var(--green2);font-size:12px;margin-bottom:10px;padding:8px 12px;background:#d1fae5;border-radius:6px;display:none}
+.auth-note{font-size:11px;color:var(--muted);text-align:center;margin-top:14px;line-height:1.7}
+.auth-note strong{color:var(--text)}
+.main{padding:24px 24px 60px;max-width:1440px;margin:0 auto}
+.alert-banner{background:#fff;border-radius:12px;border-left:4px solid var(--red);padding:12px 16px;margin-bottom:16px;box-shadow:var(--shadow);display:none}
+.alert-banner.show{display:block}
+.alert-banner.warn{border-left-color:var(--amber)}
+.alert-title{font-size:13px;font-weight:700;color:var(--red);margin-bottom:6px}
+.alert-banner.warn .alert-title{color:var(--amber)}
+.alert-chip{display:inline-block;background:var(--red-bg);color:var(--red-text);padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;margin:2px 4px}
+.alert-banner.warn .alert-chip{background:var(--amber-bg);color:var(--amber-text)}
+.dashboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px}
+.dash-card{background:var(--white);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow);border:1px solid var(--border);border-top:3px solid var(--accent);cursor:pointer;transition:transform 0.15s}
+.dash-card:hover{transform:translateY(-2px)}
+.dash-card.green{border-top-color:var(--green)}
+.dash-card.amber{border-top-color:var(--amber)}
+.dash-card.red{border-top-color:var(--red)}
+.dash-card.navy{border-top-color:var(--navy)}
+.dash-card.purple{border-top-color:#7c3aed}
+.dash-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.dash-value{font-size:30px;font-weight:700;color:var(--navy);line-height:1}
+.dash-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.page-hdr{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.page-title{font-size:20px;font-weight:700;color:var(--navy)}
+.count-pill{background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+.spacer{flex:1}
+.toolbar{display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.toolbar select,.toolbar input{border:1.5px solid var(--border);border-radius:8px;padding:8px 11px;font-size:13px;background:#fff;color:var(--text);outline:none;cursor:pointer;font-family:'IBM Plex Sans',sans-serif}
+.toolbar select:focus,.toolbar input:focus{border-color:var(--accent)}
+.search-wrap{position:relative;flex:1;min-width:160px}
+.search-wrap input{width:100%;padding-left:34px}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none}
+.chk-label{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.chk-label input{width:15px;height:15px;cursor:pointer;accent-color:var(--accent)}
+.btn{border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;display:inline-flex;align-items:center;gap:6px;transition:opacity 0.15s,transform 0.1s;white-space:nowrap;text-decoration:none}
+.btn:active{transform:scale(0.97)}
+.btn-navy{background:var(--navy);color:#fff}.btn-navy:hover{background:var(--navy2)}
+.btn-accent{background:var(--accent);color:#fff}.btn-accent:hover{opacity:0.88}
+.btn-green{background:var(--green);color:#fff}.btn-green:hover{background:var(--green2)}
+.btn-outline{background:#fff;color:var(--muted);border:1.5px solid var(--border)}.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:#fff;color:var(--red);border:1.5px solid #fecaca}.btn-danger:hover{background:#fff5f5}
+.btn-amber{background:var(--amber);color:#fff}.btn-amber:hover{opacity:0.88}
+.btn-qr{background:#fff;color:var(--navy);border:1.5px solid var(--border);font-size:12px;padding:5px 10px}.btn-qr:hover{border-color:var(--navy)}
+.btn-excel{background:#217346;color:#fff}.btn-excel:hover{background:#1a5c38}
+.btn-purple{background:#7c3aed;color:#fff}.btn-purple:hover{opacity:0.88}
+.btn-sm{padding:4px 9px;font-size:11px}
+.btn.hidden{display:none!important}
+.table-wrap{background:var(--white);border-radius:14px;overflow-x:auto;box-shadow:var(--shadow);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;min-width:1200px}
+thead{background:var(--navy)}
+th{padding:9px 8px;text-align:left;font-size:10px;font-weight:700;color:rgba(255,255,255,0.85);letter-spacing:0.4px;text-transform:uppercase;white-space:nowrap}
+td{padding:8px 8px;font-size:12px;border-bottom:1px solid var(--border2);color:var(--text);vertical-align:middle;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f6f9ff}
+tr.row-expired td{background:#fff8f8}
+tr.row-maintenance td{background:#fffbeb}
+tr.row-oos td{background:#fff0f0}
+.td-actions{display:flex;gap:4px;align-items:center}
+.bu-tag{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700}
+.bu-POWER{background:#fef3c7;color:#92400e}
+.bu-CMIO{background:#dbeafe;color:#1e40af}
+.bu-ACPA{background:#d1fae5;color:#065f46}
+.bu-BASICS{background:#ede9fe;color:#5b21b6}
+.plant-tag{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700}
+.plant-1{background:#f0fdf4;color:#166534}
+.plant-2{background:#eff6ff;color:#1e40af}
+.plant-3{background:#fdf4ff;color:#7e22ce}
+.tester-id{display:inline-block;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700;background:#0b1f3a;color:#fff;font-family:'IBM Plex Mono',monospace;letter-spacing:0.5px}
+.type-badge{display:inline-flex;align-items:center;gap:2px;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700}
+.badge-perm{background:#e0f2fe;color:#0369a1}
+.badge-temp{background:var(--amber-bg);color:var(--amber-text)}
+.badge-expired{background:var(--red-bg);color:var(--red-text)}
+.status-badge{display:inline-flex;align-items:center;gap:2px;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700}
+.s-active{background:#d1fae5;color:#065f46}
+.s-maintenance{background:#fef3c7;color:#92400e}
+.s-oos{background:#fee2e2;color:#991b1b}
+.issue-badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700}
+.i-open{background:#fee2e2;color:#991b1b}
+.i-inprogress{background:#fef3c7;color:#92400e}
+.i-fixed{background:#d1fae5;color:#065f46}
+.calib-due{color:var(--red);font-weight:700;font-size:10px}
+.calib-ok{color:var(--green);font-size:10px}
+.calib-soon{color:var(--amber);font-weight:700;font-size:10px}
+.audit-cell{font-size:11px;color:var(--muted2);line-height:1.5}
+.audit-who{color:var(--muted);font-weight:600}
+.loading-state{text-align:center;padding:50px;color:var(--muted)}
+.spinner{width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty-state{text-align:center;padding:50px 20px;color:var(--muted)}
+.empty-icon{font-size:44px;margin-bottom:10px;opacity:0.3}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(11,31,58,0.65);z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.modal-bg.open{display:flex}
+.modal{background:var(--white);border-radius:16px;padding:28px;width:540px;max-width:96vw;box-shadow:0 24px 64px rgba(0,0,0,0.35);max-height:92vh;overflow-y:auto}
+.modal-title{font-size:17px;font-weight:700;color:var(--navy);margin-bottom:20px}
+.modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-hint{font-size:11px;color:var(--muted);margin-top:4px}
+.upload-area{border:2px dashed var(--border);border-radius:10px;padding:18px;text-align:center;cursor:pointer;transition:border-color 0.2s,background 0.2s}
+.upload-area:hover{border-color:var(--accent);background:#f4f9ff}
+.upload-area.has-file{border-color:var(--green);background:#f0faf5}
+.upload-label{font-size:13px;color:var(--muted);line-height:1.6}
+.upload-label strong{color:var(--accent)}
+.qr-modal .modal{width:340px;text-align:center}
+.qr-tester{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.qr-meta{font-size:12px;color:var(--muted);margin-bottom:12px}
+.qr-frame{width:210px;height:210px;margin:0 auto 10px;background:#fff;border:2px solid var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;padding:8px}
+.qr-frame img{width:190px;height:190px;display:block}
+.qr-note{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.6}
+.doc-modal .modal{width:660px}
+.pdf-frame{width:100%;height:400px;border:1.5px solid var(--border);border-radius:10px;overflow:hidden}
+.pdf-frame iframe{width:100%;height:100%;border:none}
+.no-doc-box{width:100%;height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--light);border-radius:10px;border:1.5px dashed var(--border);color:var(--muted);gap:8px}
+.issue-modal .modal{width:620px}
+.issue-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;max-height:340px;overflow-y:auto}
+.issue-card{background:var(--light);border-radius:10px;padding:14px 16px;border-left:4px solid var(--border)}
+.issue-card.open{border-left-color:var(--red)}
+.issue-card.inprogress{border-left-color:var(--amber)}
+.issue-card.fixed{border-left-color:var(--green)}
+.issue-card-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.issue-card-title{font-weight:600;font-size:13px;color:var(--navy);flex:1}
+.issue-card-body{font-size:13px;color:var(--text);margin-bottom:6px;line-height:1.6}
+.issue-card-action{font-size:12px;color:var(--green2);background:#d1fae5;padding:6px 10px;border-radius:6px;margin-top:6px}
+.issue-card-meta{font-size:11px;color:var(--muted2);margin-top:6px}
+.add-issue-form{background:var(--light);border-radius:10px;padding:16px;border:1.5px solid var(--border2)}
+.add-issue-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px}
+.admin-tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--white);border-radius:10px;padding:5px;border:1px solid var(--border);width:fit-content;flex-wrap:wrap}
+.admin-tab{padding:7px 16px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);border:none;background:transparent;font-family:'IBM Plex Sans',sans-serif;transition:all 0.2s}
+.admin-tab.active{background:var(--navy);color:#fff}
+.users-wrap{background:var(--white);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--border)}
+.pending-row td{background:#fffbeb}
+.docs-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.doc-item{background:var(--light);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;border:1px solid var(--border)}
+.doc-item-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.doc-item-icon.pdf{background:#fee2e2;color:#dc2626}
+.doc-item-icon.img{background:#d1fae5;color:#065f46}
+.doc-item-icon.xls{background:#d1fae5;color:#166534}
+.doc-item-icon.vid{background:#ede9fe;color:#5b21b6}
+.doc-item-info{flex:1;min-width:0}
+.doc-item-type{font-size:12px;font-weight:700;color:var(--navy)}
+.doc-item-name{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.doc-item-actions{display:flex;gap:6px}
+.add-doc-form{background:var(--light);border-radius:10px;padding:14px;border:1.5px dashed var(--border);margin-top:8px}
+.add-doc-title{font-size:12px;font-weight:700;color:var(--navy);margin-bottom:10px}
+.doc-select-modal .modal{width:440px;text-align:left}
+.doc-select-list{display:flex;flex-direction:column;gap:8px;margin:16px 0}
+.doc-select-btn{background:var(--light);border:1.5px solid var(--border);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all 0.2s;width:100%;text-align:left;font-family:'IBM Plex Sans',sans-serif}
+.doc-select-btn:hover{border-color:var(--accent);background:#f0f7ff}
+.doc-select-btn .dsb-icon{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.doc-select-btn .dsb-type{font-size:13px;font-weight:700;color:var(--navy)}
+.doc-select-btn .dsb-name{font-size:11px;color:var(--muted)}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--navy);color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;z-index:500;transform:translateY(80px);opacity:0;transition:all 0.3s cubic-bezier(.34,1.56,.64,1);box-shadow:0 6px 24px rgba(0,0,0,0.25);max-width:320px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{background:var(--green)}.toast.err{background:var(--red)}.toast.warn{background:var(--amber)}
+</style>
+</head>
+<body>
+
+<script>
+const SUPABASE_URL  = 'https://wuslxgwmfjbvpgezoqha.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1c2x4Z3dtZmpidnBnZXpvcWhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4MDA2MzMsImV4cCI6MjA4OTM3NjYzM30.B_l4jkjuhTxu5G47-lA2PCFLQZC2EvXvQuWtef_jgGc';
+const ADMIN_IDS = ['E01530','E05678','E09012'];
+const LOGO_URL = 'https://ajuajith114-cmyk.github.io/tester-monitoring/logo.png';
+</script>
+
+<header>
+  <div class="logo-area">
+    <div class="logo-box"><img id="hdrLogo" src="" alt="FCI"/></div>
+    <div><div class="brand-main">Amphenol FCI</div><div class="brand-sub">Automation</div></div>
+  </div>
+  <div class="sys-label">Tester Monitoring System</div>
+  <div class="hdr-right">
+    <div class="user-chip" id="userChip" style="display:none">
+      <div><div class="user-name" id="hdrName"></div><div class="user-id" id="hdrId"></div></div>
+      <div class="avatar" id="hdrAvatar"></div>
+    </div>
+    <button class="logout-btn hidden" id="logoutBtn" onclick="confirmLogout()">⏻ Logout</button>
+  </div>
+</header>
+
+<!-- AUTH -->
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-card">
+    <div class="auth-logo"><img id="loginLogo" src="" alt="FCI"/></div>
+    <div class="auth-brand">Amphenol FCI</div>
+    <div class="auth-dept">Automation</div>
+    <div class="auth-sub" id="authSub">Tester Monitoring System</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
+      <button class="auth-tab" onclick="switchTab('register')">Register</button>
+    </div>
+    <div id="loginForm">
+      <div class="form-group"><label>Employee ID</label>
+        <input type="text" id="lEmpId" placeholder="e.g. E01234" style="font-family:'IBM Plex Mono',monospace;letter-spacing:1px"/></div>
+      <div class="form-group"><label>Password</label>
+        <input type="password" id="lPass" placeholder="Your password"/></div>
+      <div class="msg-err" id="loginErr"></div>
+      <button class="auth-btn" id="loginBtn" onclick="doLogin()">Sign In</button>
+      <div class="auth-note" id="authNote">New here? Click <strong>Register</strong>.</div>
+    </div>
+    <div id="registerForm" style="display:none">
+      <div class="form-row-2">
+        <div class="form-group"><label>Employee ID</label>
+          <input type="text" id="rEmpId" placeholder="E01234" style="font-family:'IBM Plex Mono',monospace;letter-spacing:1px"/></div>
+        <div class="form-group"><label>Full Name</label>
+          <input type="text" id="rName" placeholder="Your name"/></div>
+      </div>
+      <div class="form-group"><label>Password</label><input type="password" id="rPass" placeholder="Min 6 characters"/></div>
+      <div class="form-group"><label>Confirm Password</label><input type="password" id="rPass2" placeholder="Repeat password"/></div>
+      <div class="msg-err" id="regErr"></div>
+      <div class="msg-ok" id="regOk"></div>
+      <button class="auth-btn" id="regBtn" onclick="doRegister()">Create Account</button>
+      <div class="auth-note">Admin must <strong>approve</strong> your account before login.</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="main" id="mainApp" style="display:none">
+  <div class="alert-banner" id="expiryBanner">
+    <div class="alert-title">⚠️ Temporary Testers Expiring Within 7 Days</div>
+    <div id="expiryList" style="font-size:12px;line-height:2"></div>
+  </div>
+  <div class="alert-banner warn" id="calibBanner">
+    <div class="alert-title" style="color:var(--amber)">🔧 Calibration Due Within 30 Days</div>
+    <div id="calibList" style="font-size:12px;line-height:2"></div>
+  </div>
+
+  <div id="adminTabsBar" style="display:none">
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="showSection('testers')">🔧 Testers</button>
+      <button class="admin-tab" onclick="showSection('users')">👥 Users</button>
+    </div>
+  </div>
+  <div id="techTabsBar" style="display:none">
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="showSection('testers')">🔧 Testers</button>
+    </div>
+  </div>
+
+  <!-- TESTERS SECTION -->
+  <div id="sectionTesters">
+    <div class="dashboard">
+      <div class="dash-card navy" onclick="clearFilters()">
+        <div class="dash-label">Total Testers</div>
+        <div class="dash-value" id="dTotal">0</div>
+        <div class="dash-sub">Click to show all</div>
+      </div>
+      <div class="dash-card green" onclick="filterByStatus('active')">
+        <div class="dash-label">Active</div>
+        <div class="dash-value" id="dActive">0</div>
+        <div class="dash-sub">Click to filter</div>
+      </div>
+      <div class="dash-card amber" onclick="filterByStatus('maintenance')">
+        <div class="dash-label">Maintenance</div>
+        <div class="dash-value" id="dMaint">0</div>
+        <div class="dash-sub">Click to filter</div>
+      </div>
+      <div class="dash-card red" onclick="filterByStatus('outofservice')">
+        <div class="dash-label">Out of Service</div>
+        <div class="dash-value" id="dOos">0</div>
+        <div class="dash-sub">Click to filter</div>
+      </div>
+      <div class="dash-card amber" onclick="filterByType('permanent')">
+        <div class="dash-label">Permanent</div>
+        <div class="dash-value" id="dPerm">0</div>
+        <div class="dash-sub">Click to filter</div>
+      </div>
+      <div class="dash-card purple" onclick="filterByType('temporary')">
+        <div class="dash-label">Temporary</div>
+        <div class="dash-value" id="dTemp">0</div>
+        <div class="dash-sub">Click to filter</div>
+      </div>
+      <div class="dash-card red">
+        <div class="dash-label">No Document</div>
+        <div class="dash-value" id="dNodoc">0</div>
+        <div class="dash-sub">PDF missing</div>
+      </div>
+    </div>
+
+    <div class="page-hdr">
+      <div class="page-title">Tester Database</div>
+      <span class="count-pill" id="countPill">0</span>
+      <div class="spacer"></div>
+      <button class="btn btn-excel hidden" id="exportBtn" onclick="exportExcel()">⬇ Export Excel</button>
+      <button class="btn btn-accent hidden" id="addBtn" onclick="openAdd()">+ Add Tester</button>
+    </div>
+
+    <div class="toolbar">
+      <select id="fPlant" onchange="filterTable()">
+        <option value="">All Plants</option>
+        <option value="Plant 1">Plant 1</option>
+        <option value="Plant 2">Plant 2</option>
+        <option value="Plant 3">Plant 3</option>
+      </select>
+      <select id="fBU" onchange="filterTable()">
+        <option value="">All BU</option>
+        <option>POWER BU</option><option>CMIO</option>
+        <option>ACPA</option><option>BASICS</option>
+      </select>
+      <select id="fAsm" onchange="filterTable()">
+        <option value="">All Assembly</option>
+        <option value="1">Assembly 1</option><option value="2">Assembly 2</option>
+        <option value="3">Assembly 3</option><option value="4">Assembly 4</option>
+      </select>
+      <select id="fStatus" onchange="filterTable()">
+        <option value="">All Status</option>
+        <option value="active">Active</option>
+        <option value="maintenance">Maintenance</option>
+        <option value="outofservice">Out of Service</option>
+      </select>
+      <select id="fType" onchange="filterTable()">
+        <option value="">All Types</option>
+        <option value="permanent">Permanent</option>
+        <option value="temporary">Temporary</option>
+      </select>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="fSearch" placeholder="Search tester or project..." oninput="filterTable()"/>
+      </div>
+      <label class="chk-label">
+        <input type="checkbox" id="fShowExpired" onchange="filterTable()"/> Show expired
+      </label>
+    </div>
+
+    <div id="loadingState" class="loading-state"><div class="spinner"></div>Loading testers...</div>
+    <div class="table-wrap" id="tableWrap" style="display:none">
+      <table>
+        <thead>
+          <tr>
+            <th>Tester ID</th><th>Plant</th><th>BU</th><th>Assembly</th><th>Project</th><th>Tester Name</th>
+            <th>Status</th><th>Type</th><th>Calibration</th>
+            <th>Document</th><th>QR Code</th><th>Added By</th>
+            <th id="actionHead" class="hidden">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tBody"></tbody>
+      </table>
+      <div class="empty-state hidden" id="emptyState">
+        <div class="empty-icon">🔧</div>
+        <p>No testers found. Adjust filters or add a new tester.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- USERS SECTION -->
+  <div id="sectionUsers" style="display:none">
+    <div class="page-hdr">
+      <div class="page-title">Users &amp; Approvals</div>
+      <span class="count-pill" id="userCountPill">0</span>
+    </div>
+    <div id="usersLoading" class="loading-state"><div class="spinner"></div>Loading...</div>
+    <div class="users-wrap" id="usersWrap" style="display:none">
+      <table>
+        <thead><tr><th>Employee ID</th><th>Full Name</th><th>Role</th><th>Status</th><th>Registered</th><th>Actions</th></tr></thead>
+        <tbody id="usersBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT TESTER MODAL -->
+<div class="modal-bg" id="addModal">
+  <div class="modal">
+    <div class="modal-title" id="addModalTitle">Add New Tester</div>
+    <input type="hidden" id="eId"/>
+    <div class="form-group" id="testerIdGroup" style="display:none">
+      <label>Tester ID <span style="font-size:10px;color:var(--green);font-weight:600">(Auto Generated)</span></label>
+      <input type="text" id="fmTesterId" readonly style="background:#f0faf5;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--green2);letter-spacing:1px;cursor:default"/>
+    </div>
+    <div class="form-group">
+      <label>Plant</label>
+      <select id="fmPlant" onchange="generateTesterId()">
+        <option value="Plant 1">Plant 1</option>
+        <option value="Plant 2">Plant 2</option>
+        <option value="Plant 3">Plant 3</option>
+      </select>
+    </div>
+    <div class="form-row-2">
+      <div class="form-group"><label>Business Unit</label>
+        <select id="fmBU" onchange="generateTesterId()"><option>POWER BU</option><option>CMIO</option><option>ACPA</option><option>BASICS</option></select></div>
+      <div class="form-group"><label>Assembly Line</label>
+        <select id="fmAsm" onchange="generateTesterId()"><option value="1">Assembly 1</option><option value="2">Assembly 2</option><option value="3">Assembly 3</option><option value="4">Assembly 4</option></select></div>
+    </div>
+    <div class="form-group"><label>Project Name</label><input type="text" id="fmProject" placeholder="e.g. DELL HIPOT Tester"/></div>
+    <div class="form-group"><label>Tester Name</label><input type="text" id="fmName" placeholder="e.g. TVS Tester"/></div>
+    <div class="form-row-2">
+      <div class="form-group"><label>Tester Status</label>
+        <select id="fmStatus"><option value="active">Active</option><option value="maintenance">Under Maintenance</option><option value="outofservice">Out of Service</option></select></div>
+      <div class="form-group"><label>Tester Type</label>
+        <select id="fmType" onchange="toggleExpiry()"><option value="permanent">Permanent</option><option value="temporary">Temporary</option></select></div>
+    </div>
+    <div class="form-row-2">
+      <div class="form-group" id="expiryGroup" style="display:none"><label>Expiry Date</label>
+        <input type="date" id="fmExpiry"/><div class="form-hint">Shows EXPIRED after this date</div></div>
+      <div class="form-group"><label>Last Calibration Date</label>
+        <input type="date" id="fmCalib"/></div>
+    </div>
+    <div class="form-group"><label>Calibration Interval</label>
+      <select id="fmCalibInterval"><option value="3">Every 3 months</option><option value="6" selected>Every 6 months</option><option value="12">Every 12 months</option><option value="24">Every 24 months</option></select></div>
+    <div class="form-group">
+      <label>Documents</label>
+      <div class="docs-list" id="docsList"></div>
+      <div class="add-doc-form">
+        <div class="add-doc-title">+ Add Document</div>
+        <div class="form-row-2" style="margin-bottom:10px">
+          <div class="form-group" style="margin-bottom:0">
+            <label>Document Type</label>
+            <select id="newDocType" onchange="toggleCustomDocName()">
+              <option value="Tester Spec">Tester Spec</option>
+              <option value="Validation Report">Validation Report</option>
+              <option value="Program Images">Program Images</option>
+              <option value="Wiring Diagram">Wiring Diagram</option>
+              <option value="Calibration Certificate">Calibration Certificate</option>
+              <option value="Custom">Custom Name...</option>
+            </select>
+          </div>
+          <div class="form-group" id="customDocNameGroup" style="margin-bottom:0;display:none">
+            <label>Custom Name</label>
+            <input type="text" id="customDocName" placeholder="Enter document name"/>
+          </div>
+        </div>
+        <div class="upload-area" id="uploadArea" onclick="document.getElementById('pdfInput').click()" style="padding:14px">
+          <div class="upload-label" id="uploadLabel"><strong>Click to select file</strong><br>PDF, Image, Excel or Video</div>
+          <input type="file" id="pdfInput" accept=".pdf,.jpg,.jpeg,.png,.xlsx,.xls,.mp4,.avi,.mov,.mkv,.webm" style="display:none" onchange="onFileSelect(event)"/>
+        </div>
+        <button class="btn btn-accent btn-sm" style="margin-top:10px;width:100%" onclick="addDocToList()">+ Add to List</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('addModal')">Cancel</button>
+      <button class="btn btn-navy" id="saveBtn" onclick="saveTester()">Save Tester</button>
+    </div>
+  </div>
+</div>
+
+<!-- QR MODAL -->
+<div class="modal-bg qr-modal" id="qrModal">
+  <div class="modal">
+    <div class="modal-title">QR Code — Scan to Open Spec</div>
+    <div class="qr-tester" id="qrName"></div>
+    <div class="qr-meta" id="qrMeta"></div>
+    <div class="qr-frame" id="qrFrame">
+      <img id="qrImg" src="" alt="QR Code" width="190" height="190" style="display:block;border-radius:4px"/>
+    </div>
+    <div class="qr-note">📱 Scan with phone camera<br>Login → All documents open automatically</div>
+    <div class="modal-actions" style="justify-content:center">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('qrModal')">Close</button>
+      <button class="btn btn-navy btn-sm" onclick="printQR()">🖨 Print QR</button>
+    </div>
+  </div>
+</div>
+
+<!-- DOC SELECT MODAL -->
+<div class="modal-bg doc-select-modal" id="docSelectModal">
+  <div class="modal">
+    <div id="docSelectTitle"><div class="modal-title">Select Document</div></div>
+    <div class="doc-select-list" id="docSelectList"></div>
+    <div class="modal-actions" style="justify-content:center">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('docSelectModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- DOC MODAL -->
+<div class="modal-bg doc-modal" id="docModal">
+  <div class="modal">
+    <div class="modal-title" id="docTitle">Tester Specification</div>
+    <div id="docContent"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('docModal')">Close</button>
+      <a id="docDownload" class="btn btn-green btn-sm" style="display:none;text-decoration:none" target="_blank">⬇ Download</a>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Init ──
+document.getElementById('hdrLogo').src   = LOGO_URL;
+document.getElementById('loginLogo').src = LOGO_URL;
+
+let sb;
+try{ sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON); }
+catch(e){ console.error('Supabase init error:', e); }
+
+let currentUser = null;
+let allTesters  = [];
+let pendingFile = null;
+let pendingDocs = [];
+let deepLinkId  = null;
+
+// ── Helpers ──
+function safeGet(id){ return document.getElementById(id); }
+function setHTML(id, html){ const el = safeGet(id); if(el) el.innerHTML = html; }
+function showMsg(id, msg){ const el = safeGet(id); if(!el) return; el.textContent = msg; el.style.display = 'block'; }
+function hideMsg(id){ const el = safeGet(id); if(el) el.style.display = 'none'; }
+function setBtn(id, dis, txt){ const b = safeGet(id); if(!b) return; b.disabled = dis; b.textContent = txt; }
+
+let toastTimer;
+function showToast(msg, type){
+  clearTimeout(toastTimer);
+  const t = safeGet('toast');
+  if(!t) return;
+  t.textContent = msg;
+  t.className = 'toast ' + (type || '');
+  t.classList.add('show');
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+function fmtDate(iso){ if(!iso) return '—'; return new Date(iso).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}); }
+function fmtDateTime(iso){ if(!iso) return '—'; return new Date(iso).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
+function isExpired(t){ return t.tester_type === 'temporary' && t.expiry_date && new Date(t.expiry_date) < new Date(); }
+
+function closeModal(id){ const el = safeGet(id); if(el) el.classList.remove('open'); }
+
+// ── Deep Link ──
+function checkDeepLink(){
+  const params = new URLSearchParams(window.location.search);
+  const tid = params.get('tester');
+  if(tid){
+    deepLinkId = parseInt(tid);
+    const authNote = safeGet('authNote');
+    if(authNote) authNote.innerHTML = '<span style="color:var(--accent);font-weight:700">📱 QR Scan detected!</span><br>Login to view tester documents.';
+    const sub = safeGet('authSub');
+    if(sub) sub.textContent = 'Scan detected — Please Sign In';
+  }
+}
+
+function handleDeepLink(){
+  if(!deepLinkId) return;
+  const id = deepLinkId;
+  deepLinkId = null;
+  setTimeout(() => {
+    const t = allTesters.find(x => x.id === id);
+    if(t){
+      showToast('Opening: ' + t.name, 'ok');
+      setTimeout(() => openDocSelector(id), 600);
+    } else {
+      showToast('Tester not found.', 'warn');
+    }
+  }, 1000);
+}
+
+// ── Auth ──
+function switchTab(tab){
+  safeGet('loginForm').style.display    = tab === 'login' ? 'block' : 'none';
+  safeGet('registerForm').style.display = tab === 'register' ? 'block' : 'none';
+  document.querySelectorAll('.auth-tab').forEach((t,i) =>
+    t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'))
+  );
+}
+
+async function doLogin(){
+  const empId = safeGet('lEmpId').value.trim().toUpperCase();
+  const pass  = safeGet('lPass').value;
+  hideMsg('loginErr');
+  if(!empId || !pass){ showMsg('loginErr','Please enter your Employee ID and password.'); return; }
+  setBtn('loginBtn', true, 'Signing in...');
+  const { data: user, error } = await sb.from('users').select('*').eq('emp_id', empId).single();
+  if(error || !user){ showMsg('loginErr','Employee ID not found. Please register first.'); setBtn('loginBtn', false, 'Sign In'); return; }
+  if(!user.approved){ showMsg('loginErr','Your account is pending admin approval.'); setBtn('loginBtn', false, 'Sign In'); return; }
+  if(user.password_hash !== btoa(pass)){ showMsg('loginErr','Incorrect password.'); setBtn('loginBtn', false, 'Sign In'); return; }
+  await sb.from('users').update({ last_login: new Date().toISOString() }).eq('id', user.id);
+  const isAdmin = ADMIN_IDS.includes(empId);
+  currentUser = { emp_id: empId, name: user.full_name, role: isAdmin ? 'Admin' : 'Technician' };
+  setBtn('loginBtn', false, 'Sign In');
+  bootApp();
+}
+
+async function doRegister(){
+  const empId = safeGet('rEmpId').value.trim().toUpperCase();
+  const name  = safeGet('rName').value.trim();
+  const pass  = safeGet('rPass').value;
+  const pass2 = safeGet('rPass2').value;
+  hideMsg('regErr'); hideMsg('regOk');
+  if(!empId || !name || !pass){ showMsg('regErr','Please fill all fields.'); return; }
+  if(!/^E\d{5}$/.test(empId)){ showMsg('regErr','Employee ID must be format E01234.'); return; }
+  if(pass.length < 6){ showMsg('regErr','Password must be at least 6 characters.'); return; }
+  if(pass !== pass2){ showMsg('regErr','Passwords do not match.'); return; }
+  setBtn('regBtn', true, 'Registering...');
+  const { data: existing } = await sb.from('users').select('id').eq('emp_id', empId).maybeSingle();
+  if(existing){ showMsg('regErr','This Employee ID is already registered.'); setBtn('regBtn', false, 'Create Account'); return; }
+  const isAdmin = ADMIN_IDS.includes(empId);
+  const { error } = await sb.from('users').insert({ emp_id: empId, full_name: name, password_hash: btoa(pass), approved: isAdmin, role: isAdmin ? 'admin' : 'technician', created_at: new Date().toISOString() });
+  setBtn('regBtn', false, 'Create Account');
+  if(error){ showMsg('regErr','Registration failed: ' + error.message); return; }
+  showMsg('regOk', isAdmin ? 'Admin account created! You can sign in.' : 'Account created! Admin must approve before login.');
+}
+
+// ── Boot ──
+function bootApp(){
+  safeGet('authOverlay').style.display = 'none';
+  safeGet('mainApp').style.display     = 'block';
+  safeGet('userChip').style.display    = 'flex';
+  safeGet('logoutBtn').classList.remove('hidden');
+  const isAdmin = currentUser.role === 'Admin';
+  safeGet('hdrName').textContent   = currentUser.name;
+  safeGet('hdrId').textContent     = currentUser.emp_id;
+  safeGet('hdrAvatar').textContent = currentUser.name[0].toUpperCase();
+  safeGet('hdrAvatar').className   = 'avatar ' + (isAdmin ? 'av-admin' : 'av-tech');
+  if(isAdmin){
+    safeGet('addBtn').classList.remove('hidden');
+    safeGet('exportBtn').classList.remove('hidden');
+    safeGet('actionHead').classList.remove('hidden');
+    safeGet('adminTabsBar').style.display = 'block';
+  } else {
+    safeGet('techTabsBar').style.display = 'block';
+  }
+  loadTesters();
+}
+
+function confirmLogout(){ if(confirm('Sign out?')) location.reload(); }
+
+// ── Sections ──
+function showSection(sec){
+  ['testers','users'].forEach(s => {
+    const el = safeGet('section' + s.charAt(0).toUpperCase() + s.slice(1));
+    if(el) el.style.display = s === sec ? 'block' : 'none';
+  });
+  const map = ['testers','users'];
+  const idx = map.indexOf(sec);
+  document.querySelectorAll('#adminTabsBar .admin-tab').forEach((bt,i) => bt.classList.toggle('active', i === idx));
+  document.querySelectorAll('#techTabsBar .admin-tab').forEach((bt,i) => bt.classList.toggle('active', i === idx));
+  if(sec === 'users') loadUsers();
+}
+
+// ── Load Testers ──
+async function loadTesters(){
+  safeGet('loadingState').style.display = 'block';
+  safeGet('tableWrap').style.display    = 'none';
+  const { data, error } = await sb.from('testers').select('*').order('id', { ascending: true });
+  safeGet('loadingState').style.display = 'none';
+  safeGet('tableWrap').style.display    = 'block';
+  if(error){ showToast('Load error: ' + error.message, 'err'); return; }
+  allTesters = data || [];
+  updateDashboard();
+  checkAlerts();
+  filterTable();
+  handleDeepLink();
+}
+
+// ── Dashboard ──
+function updateDashboard(){
+  setHTML('dTotal',  allTesters.length);
+  setHTML('dActive', allTesters.filter(t => (t.status || 'active') === 'active').length);
+  setHTML('dMaint',  allTesters.filter(t => t.status === 'maintenance').length);
+  setHTML('dOos',    allTesters.filter(t => t.status === 'outofservice').length);
+  setHTML('dPerm',   allTesters.filter(t => (t.tester_type || 'permanent') === 'permanent').length);
+  setHTML('dTemp',   allTesters.filter(t => t.tester_type === 'temporary' && !isExpired(t)).length);
+  setHTML('dNodoc',  allTesters.filter(t => !t.doc_path).length);
+}
+
+function clearFilters(){
+  ['fBU','fAsm','fStatus','fType'].forEach(id => { const el = safeGet(id); if(el) el.value = ''; });
+  const fs = safeGet('fSearch'); if(fs) fs.value = '';
+  filterTable();
+}
+function filterByStatus(s){ const el = safeGet('fStatus'); if(el){ el.value = s; filterTable(); } }
+function filterByType(t){ const el = safeGet('fType'); if(el){ el.value = t; filterTable(); } }
+
+// ── Alerts ──
+function checkAlerts(){
+  const today = new Date(), in7 = new Date(), in30 = new Date();
+  in7.setDate(today.getDate() + 7);
+  in30.setDate(today.getDate() + 30);
+
+  const expiring = allTesters.filter(t => {
+    if(t.tester_type !== 'temporary' || !t.expiry_date) return false;
+    const exp = new Date(t.expiry_date);
+    return exp >= today && exp <= in7;
+  });
+  const expiryBanner = safeGet('expiryBanner');
+  if(expiring.length && expiryBanner){
+    expiryBanner.classList.add('show');
+    setHTML('expiryList', expiring.map(t => `<span class="alert-chip">🔴 ${t.name} — ${t.bu} Asm${t.assembly} — expires ${fmtDate(t.expiry_date)}</span>`).join(' '));
+  }
+
+  const calibDue = allTesters.filter(t => {
+    if(!t.last_calibration || !t.calib_interval) return false;
+    const next = new Date(t.last_calibration);
+    next.setMonth(next.getMonth() + parseInt(t.calib_interval));
+    return next >= today && next <= in30;
+  });
+  const calibBanner = safeGet('calibBanner');
+  if(calibDue.length && calibBanner){
+    calibBanner.classList.add('show');
+    setHTML('calibList', calibDue.map(t => {
+      const next = new Date(t.last_calibration);
+      next.setMonth(next.getMonth() + parseInt(t.calib_interval));
+      return `<span class="alert-chip">🔧 ${t.name} — due ${fmtDate(next.toISOString())}</span>`;
+    }).join(' '));
+  }
+}
+
+// ── Filter Table ──
+function filterTable(){
+  const plant     = (safeGet('fPlant')      || {}).value || '';
+  const bu        = (safeGet('fBU')         || {}).value || '';
+  const asm       = (safeGet('fAsm')        || {}).value || '';
+  const status    = (safeGet('fStatus')     || {}).value || '';
+  const type      = (safeGet('fType')       || {}).value || '';
+  const q         = ((safeGet('fSearch')    || {}).value || '').toLowerCase();
+  const showExp   = (safeGet('fShowExpired') || {}).checked || false;
+
+  const filtered = allTesters.filter(t => {
+    if(plant  && t.plant !== plant) return false;
+    if(bu     && t.bu !== bu) return false;
+    if(asm    && t.assembly !== asm) return false;
+    if(status && (t.status || 'active') !== status) return false;
+    if(type   && (t.tester_type || 'permanent') !== type) return false;
+    if(q && !(
+      (t.name    || '').toLowerCase().includes(q) ||
+      (t.project || '').toLowerCase().includes(q) ||
+      (t.bu      || '').toLowerCase().includes(q)
+    )) return false;
+    if(!showExp && isExpired(t)) return false;
+    return true;
+  });
+  const cp = safeGet('countPill'); if(cp) cp.textContent = filtered.length;
+  renderRows(filtered);
+}
+
+// ── Render ──
+function buClass(bu){ return { 'POWER BU':'bu-POWER','CMIO':'bu-CMIO','ACPA':'bu-ACPA','BASICS':'bu-BASICS' }[bu] || 'bu-BASICS'; }
+
+function typeBadge(t){
+  if(t.tester_type === 'temporary'){
+    if(isExpired(t)) return `<span class="type-badge badge-expired">🔴 EXPIRED</span>`;
+    return `<span class="type-badge badge-temp">🟡 TEMP</span>`;
+  }
+  return `<span class="type-badge badge-perm">🔵 PERMANENT</span>`;
+}
+
+function statusBadge(s){
+  const map = {
+    active:       `<span class="status-badge s-active">✅ Active</span>`,
+    maintenance:  `<span class="status-badge s-maintenance">🔧 Maintenance</span>`,
+    outofservice: `<span class="status-badge s-oos">🔴 Out of Service</span>`
+  };
+  return map[s || 'active'] || map['active'];
+}
+
+function calibStatus(t){
+  if(!t.last_calibration || !t.calib_interval) return { cls:'', txt:'—' };
+  const next = new Date(t.last_calibration);
+  next.setMonth(next.getMonth() + parseInt(t.calib_interval));
+  const today = new Date(), in30 = new Date();
+  in30.setDate(today.getDate() + 30);
+  if(next < today)   return { cls:'calib-due',  txt:'⚠ OVERDUE' };
+  if(next <= in30)   return { cls:'calib-soon', txt:'⚡ Due: ' + fmtDate(next.toISOString()) };
+  return { cls:'calib-ok', txt:'✓ ' + fmtDate(next.toISOString()) };
+}
+
+function renderRows(rows){
+  const isAdmin = currentUser && currentUser.role === 'Admin';
+  const tbody = safeGet('tBody');
+  const empty = safeGet('emptyState');
+  if(!rows.length){ if(tbody) tbody.innerHTML = ''; if(empty) empty.classList.remove('hidden'); return; }
+  if(empty) empty.classList.add('hidden');
+  tbody.innerHTML = rows.map(t => {
+    const cal = calibStatus(t);
+    const rowClass = isExpired(t) ? 'row-expired' : t.status === 'maintenance' ? 'row-maintenance' : t.status === 'outofservice' ? 'row-oos' : '';
+    const plantClass = { 'Plant 1':'plant-1','Plant 2':'plant-2','Plant 3':'plant-3' }[t.plant] || 'plant-1';
+    return `<tr class="${rowClass}">
+      <td><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:var(--accent);background:#e0f2fe;padding:2px 6px;border-radius:5px">${t.tester_id || '—'}</span></td>
+      <td><span class="plant-tag ${plantClass}">${t.plant || '—'}</span></td>
+      <td><span class="bu-tag ${buClass(t.bu)}">${t.bu}</span></td>
+      <td>Assembly ${t.assembly}</td>
+      <td>${t.project}</td>
+      <td><strong>${t.name}</strong></td>
+      <td>${statusBadge(t.status)}</td>
+      <td>${typeBadge(t)}</td>
+      <td><span class="${cal.cls}">${cal.txt}</span></td>
+      <td><button class="btn btn-green btn-sm" onclick="openDocSelector(${t.id})">📂 Documents</button></td>
+      <td><button class="btn btn-qr" onclick="showQR(${t.id})">⬛ QR</button></td>
+      <td><div style="font-size:11px;font-weight:600;color:var(--muted)">${t.added_by_name || '—'} <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;opacity:0.7">${t.added_by_id || ''}</span></div></td>
+      ${isAdmin ? `<td><div class="td-actions">
+        <button class="btn btn-outline btn-sm" onclick="openEdit(${t.id})">✏ Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteTester(${t.id})">🗑</button>
+      </div></td>` : ''}
+    </tr>`;
+  }).join('');
+}
+
+// ── Generate Tester ID ──
+function generateTesterId(){
+  const eid = (safeGet('eId') || {}).value;
+  if(eid) return;
+  const plant = (safeGet('fmPlant') || {}).value || 'Plant 1';
+  const bu    = (safeGet('fmBU')   || {}).value || 'POWER BU';
+  const asm   = (safeGet('fmAsm')  || {}).value || '1';
+  const buMap    = { 'POWER BU':'PW','CMIO':'CM','ACPA':'AC','BASICS':'BA' };
+  const plantMap = { 'Plant 1':'P1','Plant 2':'P2','Plant 3':'P3' };
+  const buCode    = buMap[bu]    || 'XX';
+  const plantCode = plantMap[plant] || 'P1';
+  const existing  = allTesters.filter(t => t.bu === bu && t.assembly === asm && t.plant === plant);
+  const num       = String(existing.length + 1).padStart(2, '0');
+  const newId     = `ATN-${plantCode}-${buCode}-A${asm}-${num}`;
+  const tidEl = safeGet('fmTesterId');
+  if(tidEl){ tidEl.value = newId; }
+  const tidGrp = safeGet('testerIdGroup');
+  if(tidGrp) tidGrp.style.display = 'block';
+}
+
+function toggleExpiry(){
+  const fmType = safeGet('fmType');
+  const exGrp  = safeGet('expiryGroup');
+  if(fmType && exGrp) exGrp.style.display = fmType.value === 'temporary' ? 'block' : 'none';
+}
+
+function toggleCustomDocName(){
+  const sel = safeGet('newDocType');
+  const grp = safeGet('customDocNameGroup');
+  if(sel && grp) grp.style.display = sel.value === 'Custom' ? 'block' : 'none';
+}
+
+// ── Add / Edit Modal ──
+function openAdd(){
+  if(!currentUser || currentUser.role !== 'Admin'){ showToast('Admin access only.', 'err'); return; }
+  safeGet('addModalTitle').textContent = 'Add New Tester';
+  safeGet('eId').value = '';
+  ['fmProject','fmName','fmExpiry','fmCalib'].forEach(id => { const el = safeGet(id); if(el) el.value = ''; });
+  safeGet('fmPlant').value = 'Plant 1';
+  safeGet('fmBU').value    = 'POWER BU';
+  safeGet('fmAsm').value   = '1';
+  safeGet('fmStatus').value        = 'active';
+  safeGet('fmType').value          = 'permanent';
+  safeGet('fmCalibInterval').value = '6';
+  safeGet('expiryGroup').style.display    = 'none';
+  safeGet('testerIdGroup').style.display  = 'none';
+  safeGet('fmTesterId').value = '';
+  pendingDocs = []; renderDocsList();
+  resetUpload(); pendingFile = null;
+  safeGet('addModal').classList.add('open');
+  setTimeout(generateTesterId, 100);
+}
+
+function openEdit(id){
+  if(!currentUser || currentUser.role !== 'Admin'){ showToast('Admin access only.', 'err'); return; }
+  const t = allTesters.find(x => x.id === id); if(!t) return;
+  safeGet('addModalTitle').textContent = 'Edit Tester';
+  safeGet('eId').value               = id;
+  safeGet('fmPlant').value           = t.plant || 'Plant 1';
+  safeGet('fmBU').value              = t.bu;
+  safeGet('fmAsm').value             = t.assembly;
+  safeGet('fmProject').value         = t.project;
+  safeGet('fmName').value            = t.name;
+  safeGet('fmTesterId').value        = t.tester_id || '';
+  safeGet('testerIdGroup').style.display = 'block';
+  safeGet('fmStatus').value          = t.status || 'active';
+  safeGet('fmType').value            = t.tester_type || 'permanent';
+  safeGet('fmExpiry').value          = t.expiry_date || '';
+  safeGet('fmCalib').value           = t.last_calibration || '';
+  safeGet('fmCalibInterval').value   = t.calib_interval || '6';
+  safeGet('expiryGroup').style.display = t.tester_type === 'temporary' ? 'block' : 'none';
+  pendingDocs = [];
+  renderDocsList(); // show empty state immediately
+  resetUpload(); pendingFile = null;
+  safeGet('addModal').classList.add('open');
+  loadExistingDocs(id); // async - will update the list once data arrives
+}
+
+function resetUpload(){
+  const lbl = safeGet('uploadLabel');
+  if(lbl) lbl.innerHTML = '<strong>Click to select file</strong><br>PDF, Image or Excel';
+  const area = safeGet('uploadArea');
+  if(area) area.classList.remove('has-file');
+  const inp = safeGet('pdfInput');
+  if(inp) inp.value = '';
+}
+
+function onFileSelect(e){
+  const f = e.target.files[0]; if(!f) return;
+  pendingFile = f;
+  const ext  = f.name.split('.').pop().toLowerCase();
+  const icon = ext === 'pdf' ? '📄' : ['jpg','jpeg','png'].includes(ext) ? '🖼' : ['mp4','avi','mov','mkv','webm'].includes(ext) ? '🎥' : '📊';
+  const lbl  = safeGet('uploadLabel');
+  if(lbl) lbl.innerHTML = `<strong>${icon} ${f.name}</strong><br>${(f.size/1024).toFixed(0)} KB — ready to add`;
+  const area = safeGet('uploadArea');
+  if(area) area.classList.add('has-file');
+}
+
+function addDocToList(){
+  if(!pendingFile){ showToast('Please select a file first.', 'warn'); return; }
+  const typeEl  = safeGet('newDocType');
+  const custEl  = safeGet('customDocName');
+  const type    = typeEl ? typeEl.value : 'Tester Spec';
+  const custom  = custEl ? custEl.value.trim() : '';
+  const docType = type === 'Custom' ? (custom || 'Custom Document') : type;
+  const fileToStore = pendingFile;
+  pendingDocs.push({ docType, file: fileToStore, name: fileToStore.name, isNew: true });
+  showToast(`✅ "${docType}" added! Click Save Tester to upload.`, 'ok');
+  pendingFile = null;
+  const custEl2 = safeGet('customDocName'); if(custEl2) custEl2.value = '';
+  const typeEl2 = safeGet('newDocType'); if(typeEl2) typeEl2.value = 'Tester Spec';
+  toggleCustomDocName();
+  resetUpload();
+  renderDocsList();
+}
+
+function renderDocsList(){
+  const list = safeGet('docsList');
+  if(!list) return;
+  if(!pendingDocs.length){
+    list.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:10px">No documents added yet</div>';
+    return;
+  }
+  list.innerHTML = pendingDocs.map((d, i) => {
+    const ext       = (d.name || '').split('.').pop().toLowerCase();
+    const icon      = ext === 'pdf' ? '📄' : ['jpg','jpeg','png'].includes(ext) ? '🖼' : ['mp4','avi','mov','mkv','webm'].includes(ext) ? '🎥' : '📊';
+    const iconClass = ext === 'pdf' ? 'pdf' : ['jpg','jpeg','png'].includes(ext) ? 'img' : ['mp4','avi','mov','mkv','webm'].includes(ext) ? 'vid' : 'xls';
+    // Eye button: existing saved docs use Supabase URL, new pending docs use local object URL
+    let eyeBtn = '';
+    if(d.existingPath){
+      eyeBtn = `<button class="btn btn-green btn-sm" onclick="previewExistingDoc('${d.existingPath}')">👁</button>`;
+    } else if(d.file){
+      const localUrl = URL.createObjectURL(d.file);
+      eyeBtn = `<button class="btn btn-green btn-sm" onclick="window.open('${localUrl}','_blank')">👁</button>`;
+    }
+    return `<div class="doc-item">
+      <div class="doc-item-icon ${iconClass}">${icon}</div>
+      <div class="doc-item-info">
+        <div class="doc-item-type">${d.docType}</div>
+        <div class="doc-item-name">${d.name || d.existingName || '—'}</div>
+      </div>
+      <div class="doc-item-actions">
+        ${eyeBtn}
+        <button class="btn btn-danger btn-sm" onclick="removeDoc(${i})">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function removeDoc(i){ pendingDocs.splice(i, 1); renderDocsList(); }
+
+async function loadExistingDocs(testerId){
+  // Show loading state immediately
+  const list = safeGet('docsList');
+  if(list) list.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:14px"><div class="spinner" style="margin:0 auto 8px;width:20px;height:20px;border-width:2px"></div>Loading documents...</div>';
+
+  const { data, error } = await sb.from('tester_documents').select('*').eq('tester_id', parseInt(testerId));
+
+  if(error){ console.error('loadExistingDocs error:', error); renderDocsList(); return; }
+
+  if(data && data.length){
+    pendingDocs = data.map(d => ({
+      docType: d.doc_type, name: d.doc_name,
+      existingPath: d.doc_path, existingName: d.doc_name, dbId: d.id
+    }));
+  } else {
+    pendingDocs = [];
+  }
+  renderDocsList();
+}
+
+function previewExistingDoc(path){
+  const { data } = sb.storage.from('tester-docs').getPublicUrl(path);
+  window.open(data.publicUrl, '_blank');
+}
+
+// ── Doc Selector (also used after QR scan) ──
+async function openDocSelector(id){
+  const t = allTesters.find(x => x.id === id); if(!t) return;
+
+  const titleEl = safeGet('docSelectTitle');
+  if(titleEl) titleEl.innerHTML = `
+    <div style="font-size:17px;font-weight:700;color:var(--navy);margin-bottom:4px">${t.name}</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px">${t.tester_id ? '<span style=\'background:#0b1f3a;color:#fff;padding:2px 8px;border-radius:4px;font-family:monospace;font-size:11px;margin-right:6px\'>' + t.tester_id + '</span>' : ''}${t.plant || ''} · ${t.bu} · Assembly ${t.assembly}</div>
+  `;
+
+  const list = safeGet('docSelectList');
+  if(list) list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)"><div class="spinner" style="margin:0 auto 10px"></div>Loading documents...</div>';
+  safeGet('docSelectModal').classList.add('open');
+
+  const { data, error } = await sb.from('tester_documents').select('*').eq('tester_id', parseInt(id)).order('doc_type', {ascending:true});
+
+  if(error){
+    if(list) list.innerHTML = `<div style="text-align:center;padding:20px;color:var(--red)">Error loading: ${error.message}</div>`;
+    return;
+  }
+  if(!data || !data.length){
+    if(list) list.innerHTML = `<div style="text-align:center;padding:28px 20px;color:var(--muted)">
+      <div style="font-size:40px;margin-bottom:10px">📁</div>
+      <div style="font-weight:600;margin-bottom:6px;color:var(--navy)">No documents uploaded yet</div>
+      <div style="font-size:12px">Admin can add documents by editing this tester</div>
+    </div>`;
+    return;
+  }
+
+  // Icon + color map by doc type
+  const docMeta = {
+    'Tester Spec':            { icon:'📋', bg:'#e0f2fe', clr:'#0369a1' },
+    'Validation Report':      { icon:'✅', bg:'#d1fae5', clr:'#065f46' },
+    'Program Images':         { icon:'🖼', bg:'#ede9fe', clr:'#5b21b6' },
+    'Wiring Diagram':         { icon:'⚡', bg:'#fef3c7', clr:'#92400e' },
+    'Calibration Certificate':{ icon:'🔧', bg:'#fee2e2', clr:'#991b1b' },
+  };
+
+  if(list) list.innerHTML = data.map(d => {
+    const ext  = (d.doc_name || '').split('.').pop().toLowerCase();
+    const meta = docMeta[d.doc_type] || {
+      icon: ext === 'pdf' ? '📄' : ['jpg','jpeg','png'].includes(ext) ? '🖼' : ['mp4','avi','mov','mkv','webm'].includes(ext) ? '🎥' : '📊',
+      bg: '#f0f4f9', clr: '#0b1f3a'
+    };
+    const { data: u } = sb.storage.from('tester-docs').getPublicUrl(d.doc_path);
+    return `<button class="doc-select-btn" onclick="window.open('${u.publicUrl}','_blank');closeModal('docSelectModal')">
+      <div class="dsb-icon" style="background:${meta.bg};color:${meta.clr};font-size:20px">${meta.icon}</div>
+      <div style="flex:1;text-align:left">
+        <div class="dsb-type" style="font-size:14px">${d.doc_type}</div>
+        <div class="dsb-name" style="font-size:11px;color:var(--muted);margin-top:2px">${d.doc_name}</div>
+      </div>
+      <span style="font-size:20px;color:var(--accent)">→</span>
+    </button>`;
+  }).join('');
+}
+
+// ── Save Tester ──
+async function saveTester(){
+  if(!currentUser || currentUser.role !== 'Admin'){ showToast('Admin access only.', 'err'); return; }
+  const bu              = safeGet('fmBU').value;
+  const assembly        = safeGet('fmAsm').value;
+  const project         = safeGet('fmProject').value.trim();
+  const name            = safeGet('fmName').value.trim();
+  const status          = safeGet('fmStatus').value;
+  const tester_type     = safeGet('fmType').value;
+  const expiry_date     = safeGet('fmExpiry').value || null;
+  const last_calibration = safeGet('fmCalib').value || null;
+  const calib_interval  = safeGet('fmCalibInterval').value;
+  const eid             = safeGet('eId').value;
+  const plant           = safeGet('fmPlant').value;
+  const tester_id       = safeGet('fmTesterId').value || null;
+
+  if(!project || !name){ showToast('Please fill in all required fields.', 'err'); return; }
+  if(tester_type === 'temporary' && !expiry_date){ showToast('Please set an expiry date.', 'warn'); return; }
+  setBtn('saveBtn', true, 'Saving...');
+
+  const payload = {
+    tester_id, plant, bu, assembly, project, name, status, tester_type,
+    expiry_date: tester_type === 'temporary' ? expiry_date : null,
+    last_calibration, calib_interval,
+    added_by_id: currentUser.emp_id, added_by_name: currentUser.name
+  };
+
+  let testerId = eid ? parseInt(eid) : null;
+
+  if(eid){
+    const { error } = await sb.from('testers').update(payload).eq('id', eid);
+    if(error){ showToast('Update failed: ' + error.message, 'err'); setBtn('saveBtn', false, 'Save Tester'); return; }
+    testerId = parseInt(eid);
+  } else {
+    payload.created_at = new Date().toISOString();
+    const { data: insertedRows, error } = await sb.from('testers').insert(payload).select('id');
+    if(error){ showToast('Add failed: ' + error.message, 'err'); setBtn('saveBtn', false, 'Save Tester'); return; }
+    if(!insertedRows || !insertedRows.length){
+      const { data: latest } = await sb.from('testers').select('id').eq('added_by_id', currentUser.emp_id).order('id', { ascending: false }).limit(1);
+      testerId = latest && latest.length ? latest[0].id : null;
+    } else {
+      testerId = insertedRows[0].id;
+    }
+  }
+
+  if(!testerId){
+    showToast('Tester saved but could not upload documents. Edit the tester to add documents.', 'warn');
+    setBtn('saveBtn', false, 'Save Tester');
+    closeModal('addModal');
+    loadTesters();
+    return;
+  }
+
+  // Snapshot which dbIds existed BEFORE this save — only these can be deleted in cleanup
+  const originalDbIds = pendingDocs.filter(d => d.dbId).map(d => d.dbId);
+  const newDocs = pendingDocs.filter(d => d.isNew === true && d.file);
+  let uploadedCount = 0;
+  const uploadErrors = [];
+
+  console.log('Starting upload. testerId:', testerId, 'newDocs count:', newDocs.length);
+
+  for(let i = 0; i < newDocs.length; i++){
+    const doc = newDocs[i];
+    try{
+      const safeName = doc.file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const unique   = Date.now() + '_' + i + '_' + Math.random().toString(36).slice(2,7);
+      const fn       = 'docs/' + testerId + '_' + unique + '_' + safeName;
+
+      console.log('Uploading file', i+1, ':', fn, 'size:', doc.file.size);
+
+      const { data: up, error: ue } = await sb.storage.from('tester-docs').upload(fn, doc.file, { upsert: true });
+
+      if(ue){
+        console.error('Storage upload error for', doc.docType, ':', ue);
+        uploadErrors.push(doc.docType + ': ' + ue.message);
+        showToast('Upload error: ' + ue.message, 'err');
+        continue;
+      }
+
+      console.log('Storage upload OK. path:', up.path, 'Saving to DB...');
+
+      const { data: dbData, error: de } = await sb.from('tester_documents').insert({
+        tester_id: parseInt(testerId),
+        doc_type: doc.docType,
+        doc_name: doc.file.name,
+        doc_path: up.path,
+        uploaded_by_id: currentUser.emp_id,
+        uploaded_by_name: currentUser.name,
+        created_at: new Date().toISOString()
+      }).select();
+
+      if(de){
+        console.error('DB insert error for', doc.docType, ':', de);
+        uploadErrors.push(doc.docType + ' DB: ' + de.message);
+        showToast('DB error: ' + de.message, 'err');
+      } else {
+        console.log('DB insert OK:', dbData);
+        uploadedCount++;
+      }
+    } catch(err){
+      console.error('Unexpected error:', err);
+      uploadErrors.push(doc.docType + ': ' + err.message);
+    }
+  }
+
+  if(eid){
+    // keepDbIds = original docs the user kept (still in pendingDocs with dbId)
+    const keepDbIds = pendingDocs.filter(d => d.dbId).map(d => d.dbId);
+    // Only look at originalDbIds snapshot — never touch newly inserted docs
+    for(const oldId of originalDbIds){
+      if(!keepDbIds.includes(oldId)){
+        // User removed this original doc — delete from storage and DB
+        const { data: docToDelete } = await sb.from('tester_documents').select('doc_path').eq('id', oldId).single();
+        if(docToDelete) await sb.storage.from('tester-docs').remove([docToDelete.doc_path]);
+        await sb.from('tester_documents').delete().eq('id', oldId);
+      }
+    }
+  }
+
+  showToast(newDocs.length > 0
+    ? `${eid ? 'Updated' : 'Added'}! ${uploadedCount}/${newDocs.length} document(s) uploaded.`
+    : (eid ? 'Tester updated!' : 'Tester added!'), 'ok');
+
+  setBtn('saveBtn', false, 'Save Tester');
+  pendingDocs = [];
+  closeModal('addModal');
+  loadTesters();
+}
+
+// ── Delete Tester ──
+async function deleteTester(id){
+  if(!currentUser || currentUser.role !== 'Admin'){ showToast('Admin access only.', 'err'); return; }
+  const t = allTesters.find(x => x.id === id); if(!t) return;
+  if(!confirm(`Delete "${t.name}"?`)) return;
+  if(t.doc_path) await sb.storage.from('tester-docs').remove([t.doc_path]);
+  const { error } = await sb.from('testers').delete().eq('id', id);
+  if(error){ showToast('Delete failed: ' + error.message, 'err'); return; }
+  showToast('Tester deleted.', '');
+  loadTesters();
+}
+
+// ── QR Code ──
+function showQR(id){
+  const t = allTesters.find(x => x.id === id); if(!t) return;
+  setHTML('qrName', t.name);
+  setHTML('qrMeta', `
+    ${t.tester_id ? `<span style="background:#0b1f3a;color:#fff;padding:2px 10px;border-radius:5px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;margin-bottom:4px;display:inline-block">${t.tester_id}</span><br>` : ''}
+    ${t.plant || ''} · ${t.bu} · Assembly ${t.assembly} · ${t.project}
+  `);
+  const base   = window.location.href.split('?')[0].split('#')[0];
+  const qrUrl  = `${base}?tester=${t.id}`;
+  const enc    = encodeURIComponent(qrUrl);
+  const qrSrc  = `https://api.qrserver.com/v1/create-qr-code/?size=190x190&data=${enc}&ecc=M&margin=2`;
+  const img    = safeGet('qrImg');
+  if(img){
+    img.src = qrSrc;
+    img.onerror = function(){ this.onerror = null; this.src = `https://chart.googleapis.com/chart?chs=190x190&cht=qr&chl=${enc}&choe=UTF-8`; };
+  }
+  window._qrPrint = { tester_id: t.tester_id || '', name: t.name, bu: t.bu, asm: t.assembly, plant: t.plant || '', project: t.project, url: qrUrl, qrSrc };
+  safeGet('qrModal').classList.add('open');
+}
+
+function printQR(){
+  const d = window._qrPrint; if(!d) return;
+  const w = window.open('', '_blank', 'width=400,height=540');
+  w.document.write(`<!DOCTYPE html><html><head><title>QR-${d.name}</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',sans-serif;text-align:center;padding:24px;background:#fff}
+.logo{width:60px;height:60px;object-fit:contain;margin-bottom:8px;border-radius:10px}
+.co{font-size:10px;color:#999;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px}
+.tname{font-size:20px;font-weight:700;color:#0b1f3a;margin-bottom:3px}
+.meta{font-size:11px;color:#666;margin-bottom:2px}.proj{font-size:13px;font-weight:600;color:#0057b8;margin-bottom:14px}
+.qrimg{width:200px;height:200px}hr{border:none;border-top:1px dashed #ddd;margin:12px auto;width:80%}
+.note{font-size:12px;color:#888;margin-top:8px}@media print{body{padding:12px}}</style></head><body>
+<img class="logo" src="${LOGO_URL}" alt="logo"/>
+<div class="co">Amphenol FCI &middot; Automation</div>
+${d.tester_id ? `<div style="font-family:monospace;font-size:13px;font-weight:700;background:#0b1f3a;color:#fff;display:inline-block;padding:4px 12px;border-radius:6px;margin-bottom:8px">${d.tester_id}</div>` : ''}
+<div class="tname">${d.name}</div>
+<div class="meta">${d.plant ? d.plant + ' &middot; ' : ''}${d.bu} &middot; Assembly ${d.asm}</div>
+<div class="proj">${d.project}</div>
+<img class="qrimg" src="${d.qrSrc}" alt="QR Code"/>
+<hr/><div class="note">📱 Scan to open tester specification</div>
+<script>window.onload=()=>setTimeout(()=>window.print(),600)<\/script></body></html>`);
+  w.document.close();
+}
+
+// ── Export Excel ──
+function exportExcel(){
+  const rows = [['Tester ID','Plant','BU','Assembly','Project','Tester Name','Status','Type','Last Calibration','Next Calibration Due','Expiry Date','Added By','Added By ID']];
+  allTesters.forEach(t => {
+    let nextCalib = '';
+    if(t.last_calibration && t.calib_interval){
+      const next = new Date(t.last_calibration);
+      next.setMonth(next.getMonth() + parseInt(t.calib_interval));
+      nextCalib = fmtDate(next.toISOString());
+    }
+    rows.push([ t.tester_id||'—', t.plant||'—', t.bu, 'Assembly '+t.assembly, t.project, t.name, t.status||'active', t.tester_type||'permanent', fmtDate(t.last_calibration), nextCalib, fmtDate(t.expiry_date), t.added_by_name||'', t.added_by_id||'' ]);
+  });
+  const csv  = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = `Tester_Database_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+  URL.revokeObjectURL(url);
+  showToast('Excel downloaded!', 'ok');
+}
+
+// ── Users ──
+async function loadUsers(){
+  safeGet('usersLoading').style.display = 'block';
+  safeGet('usersWrap').style.display    = 'none';
+  const { data, error } = await sb.from('users').select('*').order('approved', { ascending: true }).order('created_at', { ascending: false });
+  safeGet('usersLoading').style.display = 'none';
+  safeGet('usersWrap').style.display    = 'block';
+  if(error){ showToast('Error: ' + error.message, 'err'); return; }
+  const cp = safeGet('userCountPill'); if(cp) cp.textContent = (data || []).length;
+  const tbody = safeGet('usersBody');
+  if(!data || !data.length){ if(tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">No users yet.</td></tr>`; return; }
+  tbody.innerHTML = data.map(u => {
+    const isAdm   = ADMIN_IDS.includes(u.emp_id);
+    const roleLbl = isAdm ? `<span class="type-badge badge-perm">Admin</span>` : `<span class="type-badge" style="background:#f0f4f9;color:var(--muted)">Technician</span>`;
+    const status  = u.approved ? `<span class="status-badge s-active">✅ Approved</span>` : `<span class="type-badge badge-temp">⏳ Pending</span>`;
+    const actions = u.emp_id === currentUser.emp_id ? '<span style="font-size:12px;color:var(--muted2)">— You —</span>' : `
+      ${!u.approved ? `<button class="btn btn-green btn-sm" onclick="approveUser(${u.id})">✔ Approve</button>` : ''}
+      ${!isAdm ? `<button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id},'${u.emp_id}')">🗑 Remove</button>` : ''}`;
+    return `<tr class="${!u.approved ? 'pending-row' : ''}">
+      <td><strong style="font-family:'IBM Plex Mono',monospace">${u.emp_id}</strong></td>
+      <td>${u.full_name}</td><td>${roleLbl}</td><td>${status}</td>
+      <td style="font-size:12px;color:var(--muted)">${fmtDate(u.created_at)}</td>
+      <td><div class="td-actions">${actions}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+async function approveUser(id){
+  const { error } = await sb.from('users').update({ approved: true }).eq('id', id);
+  if(error){ showToast('Error: ' + error.message, 'err'); return; }
+  showToast('User approved!', 'ok');
+  loadUsers();
+}
+
+async function deleteUser(id, empId){
+  if(!confirm(`Remove ${empId}?`)) return;
+  const { error } = await sb.from('users').delete().eq('id', id);
+  if(error){ showToast('Error: ' + error.message, 'err'); return; }
+  showToast('Removed.', '');
+  loadUsers();
+}
+
+// ── Modal close on backdrop ──
+document.querySelectorAll('.modal-bg').forEach(m => {
+  m.addEventListener('click', e => { if(e.target === m) m.classList.remove('open'); });
+});
+
+// ── Keyboard shortcuts ──
+const lPass  = safeGet('lPass');
+const lEmpId = safeGet('lEmpId');
+if(lPass)  lPass.addEventListener('keydown',  e => { if(e.key === 'Enter') doLogin(); });
+if(lEmpId) lEmpId.addEventListener('keydown', e => { if(e.key === 'Enter') doLogin(); });
+
+// ── Run ──
+checkDeepLink();
+</script>
+</body>
+</html>
