@@ -1,0 +1,27 @@
+{
+  "name": "Tester Monitoring — Amphenol FCI",
+  "short_name": "FCI Tester",
+  "description": "Amphenol FCI Automation Tester Monitoring System",
+  "start_url": "/tester-monitoring/",
+  "scope": "/tester-monitoring/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b1f3a",
+  "theme_color": "#0b1f3a",
+  "icons": [
+    {
+      "src": "https://ajuajith114-cmyk.github.io/tester-monitoring/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://ajuajith114-cmyk.github.io/tester-monitoring/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "lang": "en"
+}
